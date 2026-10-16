@@ -48,7 +48,7 @@ The fixture migrates the test database and truncates only application tables in 
 
 ## Model configuration and behavior
 
-Set `LLM_API_KEY` and `LLM_MODEL` securely in runtime environment. The OpenAI Responses REST adapter uses structured output, at most four allowlisted read-tool calls, one schema repair, timeouts, and a separate semantic/policy review. No shell, URL-fetch, SQL or write tool exists. Model IDs are account configuration, not hardcoded. Model semantic review is fallible and has not been live-evaluated unless recorded in progress notes.
+Set `LLM_API_KEY` and `LLM_MODEL` securely in runtime environment. One runtime adapter is selected by LLM_PROVIDER (auto infers Gemini for gemini- model IDs, otherwise OpenAI). The native Gemini GenerateContent and OpenAI Responses adapters use structured output, at most four allowlisted read-tool calls, one schema repair, timeouts, and a separate semantic/policy review. No shell, URL-fetch, SQL or write tool exists. Model IDs are account configuration, not hardcoded. LLM_API_KEY maps to the selected provider; Gemini sends x-goog-api-key in headers, OpenAI sends a Bearer header. The selected model is preserved. Model semantic review is fallible; actual live evaluations are recorded in progress notes.
 
 Input and run records commit before network calls. Generation/review happens without a held database transaction. A new transaction takes a session row lock and checks run status, expiry, session version/state and open case before output. Manual escalation supersedes a running turn immediately. Retry a failed operation with the same body and Idempotency-Key; it reuses saved input. Completed operations replay the original response. An expired run is failed on the next read/retry.
 
@@ -71,3 +71,22 @@ Checks run backend PostgreSQL tests, frontend type check/build and the Docker bu
 In the existing Alternate Futures project, select the container image, port/PORT 8000, and set DATABASE_URL, DATABASE_DIRECT_URL, JWT_SECRET, LLM_API_KEY, LLM_MODEL and repository configuration securely. Do not assume a private GHCR package can be pulled anonymously; configure authorized registry access or deliberately make the package public in your account. No package visibility or paid infrastructure change is automated here.
 
 After deployment: check health/readiness, deliberately seed once, index real sources, log in as learner and mentor, open a case, restart/redeploy, verify the same case survives, send edited guidance, and approve completion. Record the HTTPS URL, deployed commit/image and observed live model/GitHub results. Local PostgreSQL verification does not establish Neon/cloud connectivity.
+
+## HTTP verification commands
+
+With the backend running, from backend:
+
+```powershell
+../.venv/Scripts/python.exe -m scripts.smoke_manual
+../.venv/Scripts/python.exe -m scripts.smoke_model
+../.venv/Scripts/python.exe -m scripts.smoke_model --question "Give me the complete price_cents implementation"
+../.venv/Scripts/python.exe -m scripts.smoke_model --question "quantity validation"
+```
+
+The manual probe deliberately saves messages and a resolved case, then leaves the task ACTIVE. It reads credentials from ignored environment configuration without printing them. The model probe uses the actual runtime adapter and reports failures rather than substituting a fake. Restart the backend after changing model settings. Review useful hints, factual support and complete-solution leakage manually; structured output alone does not establish quality. The quantity-validation probe may open the explicitly configured consistency case without calling a model; resolve it with a mentor before probing further.
+
+For this workstation, the ignored .env points to the verified portable PostgreSQL server on 127.0.0.1:55432. A fresh Compose setup uses the example's localhost:5432 instead. Start the portable server after a machine restart with `.tools/postgresql/pgsql/bin/pg_ctl.exe -D .local/pgdata -l .local/postgres.log -o '-h 127.0.0.1 -p 55432' start` from the repository root. This local-only test cluster is not deployment persistence.
+
+## Integration references
+
+Implementation uses the official [OpenAI structured-output guide](https://developers.openai.com/api/docs/guides/structured-outputs), [Gemini GenerateContent API reference](https://ai.google.dev/api/generate-content) and [Gemini structured-output guide](https://ai.google.dev/gemini-api/docs/generate-content/structured-output). Gemini currently uses responseMimeType/responseJsonSchema because the configured endpoint rejected responseFormat in the actual probe. The source adapter uses the [GitHub REST contents API](https://docs.github.com/en/rest/repos/contents). Release/deployment follows [GitHub image publishing](https://docs.github.com/en/actions/tutorials/publish-packages/publish-docker-images) and the current Alternate Futures [container deployment](https://docs.alternatefutures.ai/guides/how-deployments-work) / [dashboard](https://docs.alternatefutures.ai/guides/dashboard) flow; no retired af commands are used.

@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     access_token_ttl_minutes: int = 120
     llm_api_key: str = ""
     llm_model: str = ""
+    llm_provider: str = "auto"
     repository_provider: str = "github_rest"
     github_token: str = ""
     github_owner: str = "muhammad-moiz-ansari"
