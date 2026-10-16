@@ -85,7 +85,7 @@ With the backend running, from backend:
 
 The manual probe deliberately saves messages and a resolved case, then leaves the task ACTIVE. It reads credentials from ignored environment configuration without printing them. The model probe uses the actual runtime adapter and reports failures rather than substituting a fake. Restart the backend after changing model settings. Review useful hints, factual support and complete-solution leakage manually; structured output alone does not establish quality. The quantity-validation probe may open the explicitly configured consistency case without calling a model; resolve it with a mentor before probing further.
 
-For this workstation, the ignored .env points to the verified portable PostgreSQL server on 127.0.0.1:55432. A fresh Compose setup uses the example's localhost:5432 instead. Start the portable server after a machine restart with `.tools/postgresql/pgsql/bin/pg_ctl.exe -D .local/pgdata -l .local/postgres.log -o '-h 127.0.0.1 -p 55432' start` from the repository root. This local-only test cluster is not deployment persistence.
+On this workstation, the ignored root .env now points to hosted Neon. Keep TEST_DATABASE_URL explicitly set to the disposable local `rampup_test` database at 127.0.0.1:55432 when running tests. A fresh Compose setup uses the example's localhost:5432 instead. Start the portable local test server after a machine restart with `.tools/postgresql/pgsql/bin/pg_ctl.exe -D .local/pgdata -l .local/postgres.log -o '-h 127.0.0.1 -p 55432' start` from the repository root. This local-only test cluster is not deployment persistence.
 
 ## Integration references
 
