@@ -1,0 +1,59 @@
+from enum import StrEnum
+
+
+class Role(StrEnum):
+    LEARNER = "LEARNER"
+    MENTOR = "MENTOR"
+
+
+class SessionState(StrEnum):
+    ACTIVE = "ACTIVE"
+    WAITING_FOR_MENTOR = "WAITING_FOR_MENTOR"
+    MENTOR_ACTIVE = "MENTOR_ACTIVE"
+    COMPLETION_REVIEW = "COMPLETION_REVIEW"
+    COMPLETED = "COMPLETED"
+
+
+class CaseStatus(StrEnum):
+    OPEN = "OPEN"
+    RESOLVED = "RESOLVED"
+
+
+class Reason(StrEnum):
+    MANUAL = "MANUAL"
+    REPEATED_ATTEMPTS = "REPEATED_ATTEMPTS"
+    MISSING_EVIDENCE = "MISSING_EVIDENCE"
+    SOURCE_CONFLICT = "SOURCE_CONFLICT"
+    PROTECTED_PATH = "PROTECTED_PATH"
+
+
+class AssistanceMode(StrEnum):
+    HINTS = "HINTS"
+    CONCEPTS = "CONCEPTS"
+    ATTEMPT_REVIEW = "ATTEMPT_REVIEW"
+
+
+class DecisionAction(StrEnum):
+    SEND_GUIDANCE = "SEND_GUIDANCE"
+    ASK_QUESTION = "ASK_QUESTION"
+    TAKE_OVER = "TAKE_OVER"
+    REJECT_SUGGESTION = "REJECT_SUGGESTION"
+
+
+class MessageAuthor(StrEnum):
+    LEARNER = "LEARNER"
+    AI = "AI"
+    MENTOR = "MENTOR"
+    SYSTEM = "SYSTEM"
+
+
+class RunStatus(StrEnum):
+    RUNNING = "RUNNING"
+    SUCCEEDED = "SUCCEEDED"
+    FAILED = "FAILED"
+
+
+class Assessment(StrEnum):
+    UNRESOLVED = "UNRESOLVED"
+    PROGRESS = "PROGRESS"
+    NEEDS_REVIEW = "NEEDS_REVIEW"

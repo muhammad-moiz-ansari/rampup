@@ -22,4 +22,6 @@ In another terminal: `cd frontend`, `npm ci`, `npm run dev`. Backend health: htt
 
 Tests: from `backend`, run `../.venv/Scripts/python.exe -m pytest tests -q`. Full image: from root, `docker compose up --build`.
 
-See [API contract](contracts/api-contract.md), [frontend handoff](docs/frontend-handoff.md), [progress](docs/backend-progress.md), and [external setup](docs/setup-required.md). Migration, seed, indexing and deployment steps will be documented with their implementation.
+Before starting the backend, run migrations and deliberately seed from `backend`: `../.venv/Scripts/python.exe -m alembic upgrade head`, then `../.venv/Scripts/python.exe -m scripts.seed_demo`. Index evidence from a pushed commit containing `demo-repo/` using `../.venv/Scripts/python.exe -m scripts.index_sources --ref <pushed-commit-sha>`. Set LLM_API_KEY and LLM_MODEL for live coaching. Manual mentor handoff works without model credentials.
+
+See [backend runbook](docs/backend-runbook.md) for complete local/Docker/migration/seed/index/test/deploy commands, [API contract](contracts/api-contract.md), [frontend handoff](docs/frontend-handoff.md), [progress](docs/backend-progress.md), and [external setup](docs/setup-required.md). Actual implemented schemas are in [OpenAPI](contracts/openapi.json).
