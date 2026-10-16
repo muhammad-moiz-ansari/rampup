@@ -1,14 +1,29 @@
 """Index 10 allowlisted demo files from one real GitHub commit; never local fixtures."""
 
 import argparse
-from sqlalchemy import func
+from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 from app.config import get_settings
 from app.db import get_engine
-from app.models import Project, SourceChunk, uid
+from app.models import Project, SourceChunk, uid, Event, LearningSession, Task
 from app.repository import provider_for
 from scripts.seed_demo import PROJECT
+
+
+def record_refresh(db, project_id, status, summary):
+    session_ids = db.scalars(
+        select(LearningSession.id).join(Task).where(Task.project_id == project_id)
+    )
+    for session_id in session_ids:
+        db.add(
+            Event(
+                session_id=session_id,
+                tool="github_index",
+                status=status,
+                summary=summary,
+            )
+        )
 
 
 def main():
@@ -42,6 +57,14 @@ def main():
             for path in project_data["allowed_paths"]
         ]
     except Exception:
+        with Session(get_engine()) as db:
+            record_refresh(
+                db,
+                project_data["id"],
+                "FAILED",
+                "Live GitHub refresh failed; existing pinned snapshots remain available.",
+            )
+            db.commit()
         raise SystemExit(
             "GitHub indexing failed; saved snapshots preserved. Check repository/ref/token/network."
         ) from None
@@ -78,6 +101,12 @@ def main():
             db.execute(statement)
         project = db.get(Project, PROJECT, with_for_update=True)
         project.commit_sha = commit
+        record_refresh(
+            db,
+            project.id,
+            "SUCCEEDED",
+            f"Indexed {len(files)} live GitHub files at {commit}.",
+        )
         db.commit()
     print(f"Indexed {len(files)} live GitHub files / {len(chunks)} chunks at {commit}.")
 

@@ -191,6 +191,7 @@ def test_completion_requires_mentor_and_completed_is_read_only(system):
 
 def test_unique_session_and_body_key_conflict(system):
     s = system
+    assert s["session"]["updated_at"].endswith("Z")
     response = s["client"].post(
         "/api/v1/sessions", json={"task_id": s["task_id"]}, headers=s["headers"]()
     )
@@ -201,3 +202,24 @@ def test_unique_session_and_body_key_conflict(system):
         == 200
     )
     assert post(s, "messages", {"content": "other"}, key=key).status_code == 409
+
+
+def test_simultaneous_mentor_decisions_only_one_wins(system):
+    s = system
+    c = case(s)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        responses = list(
+            pool.map(
+                lambda text: decide(s, c["id"], c["revision"], text=text),
+                ["first guidance", "second guidance"],
+            )
+        )
+    assert sorted(r.status_code for r in responses) == [200, 409], [
+        r.text for r in responses
+    ]
+    latest = (
+        s["client"]
+        .get(f"/api/v1/sessions/{s['session']['id']}", headers=s["headers"]())
+        .json()
+    )
+    assert len([m for m in latest["messages"] if m["author"] == "MENTOR"]) == 1

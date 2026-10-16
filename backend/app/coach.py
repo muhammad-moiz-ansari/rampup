@@ -1,6 +1,7 @@
 """Save input before network work, then lock/version-check before saving any output."""
 
 from datetime import timedelta
+import httpx
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from app.errors import AppError, conflict
@@ -13,6 +14,8 @@ from app.models import (
     Event,
     SourceChunk,
     IdempotencyRequest,
+    Escalation,
+    MentorDecision,
     now,
 )
 from app.model_adapter import CoachResult
@@ -32,8 +35,10 @@ from app.workflow import (
 
 
 class SnapshotTools:
-    def __init__(self, engine, project_id, session_id):
+    def __init__(self, engine, project_id, session_id, commit_sha=None):
         self.engine, self.project_id, self.session_id = engine, project_id, session_id
+        with Session(engine) as db:
+            self.commit_sha = commit_sha or db.get(Project, project_id).commit_sha
         self.retrieved = {}
         self.events = []
         self.calls = 0
@@ -41,10 +46,17 @@ class SnapshotTools:
     def search(self, query):
         with Session(self.engine) as db:
             project = db.get(Project, self.project_id)
-            sources = search_sources(db, project, query)
+            sources = search_sources(db, project, query, commit_sha=self.commit_sha)
+            selected, budget = [], 12000
             for source in sources:
-                self.retrieved[source.id] = citation(source, project)
-            return [self.retrieved[source.id] for source in sources]
+                item = citation(source, project)
+                size = len(item["excerpt"])
+                if size > 8000 or size > budget:
+                    continue
+                budget -= size
+                self.retrieved[source.id] = item
+                selected.append(item)
+            return selected
 
     def __call__(self, name, args):
         self.calls += 1
@@ -78,7 +90,7 @@ class SnapshotTools:
                     source = db.scalar(
                         select(SourceChunk).where(
                             SourceChunk.project_id == project.id,
-                            SourceChunk.commit_sha == project.commit_sha,
+                            SourceChunk.commit_sha == self.commit_sha,
                             SourceChunk.path == path,
                             SourceChunk.start_line <= start,
                             SourceChunk.end_line >= end,
@@ -89,6 +101,8 @@ class SnapshotTools:
                     else:
                         # Track the actual returned subrange; model cannot cite unreturned lines.
                         value = citation(source, project, start, end)
+                        if len(value["excerpt"]) > 8000:
+                            raise ValueError("Read text budget exceeded")
                         self.retrieved[source.id] = value
             elif name == "get_learning_history" and not args:
                 with Session(self.engine) as db:
@@ -96,6 +110,18 @@ class SnapshotTools:
                         "messages": messages(db, self.session_id)[-15:],
                         "attempts": attempts(db, self.session_id)[-5:],
                     }
+                    value["messages"] = [
+                        {"author": m["author"], "content": m["content"][:800]}
+                        for m in value["messages"][-8:]
+                    ]
+                    value["attempts"] = [
+                        {
+                            "milestone_id": a["milestone_id"],
+                            "explanation": a["explanation"][:800],
+                            "assessment": a["assessment"],
+                        }
+                        for a in value["attempts"][-3:]
+                    ]
                     # Convert timestamps for tool transport.
                     import json
 
@@ -218,22 +244,6 @@ def submit_input(db, user, session_id, body, key, kind, model):
     if human_only:
         return finish_operation(db, operation, session, user)
     query = saved.content if kind == "message" else saved.explanation
-    if kind == "attempt" and any(
-        protected(p, task.policy["protected_paths"]) for p in saved.file_paths
-    ):
-        saved.assessment, saved.assessment_note, saved.assessed = (
-            "NEEDS_REVIEW",
-            "Supplied path matches protected policy; mentor review required.",
-            True,
-        )
-        create_case(
-            db,
-            session,
-            "PROTECTED_PATH",
-            query,
-            summary="An explicit attempt includes a protected path.",
-        )
-        return finish_operation(db, operation, session, user)
     project = db.get(Project, task.project_id)
     run = AgentRun(
         session_id=session.id,
@@ -245,6 +255,23 @@ def submit_input(db, user, session_id, body, key, kind, model):
     )
     db.add(run)
     db.flush()
+    if kind == "attempt" and any(
+        protected(p, task.policy["protected_paths"]) for p in saved.file_paths
+    ):
+        saved.assessment, saved.assessment_note, saved.assessed = (
+            "NEEDS_REVIEW",
+            "Supplied path matches protected policy; mentor review required.",
+            True,
+        )
+        run.status, run.ended_at = "SUCCEEDED", now()
+        create_case(
+            db,
+            session,
+            "PROTECTED_PATH",
+            query,
+            summary="An explicit attempt includes a protected path.",
+        )
+        return finish_operation(db, operation, session, user)
     run_id, operation_id, project_id, version = (
         run.id,
         operation.id,
@@ -252,8 +279,8 @@ def submit_input(db, user, session_id, body, key, kind, model):
         session.version,
     )
     history = [
-        {"author": m["author"], "content": m["content"][:2000]}
-        for m in messages(db, session.id)[-12:]
+        {"author": m["author"], "content": m["content"][:1000]}
+        for m in messages(db, session.id)[-8:]
     ]
     context = {
         "task": task.description,
@@ -263,10 +290,56 @@ def submit_input(db, user, session_id, body, key, kind, model):
         "input": body.model_dump(mode="json"),
         "history": history,
     }
+    payload = context["input"]
+    for field, limit in (
+        ("content", 6000),
+        ("explanation", 3000),
+        ("code", 6000),
+        ("test_output", 2000),
+    ):
+        if isinstance(payload.get(field), str) and len(payload[field]) > limit:
+            payload[field] = payload[field][:limit]
+            context.setdefault("truncated_input_fields", []).append(field)
+    if "file_paths" in payload:
+        payload["file_paths"] = payload["file_paths"][:10]
+    approved = db.scalars(
+        select(MentorDecision)
+        .join(Escalation)
+        .where(
+            Escalation.session_id == session.id,
+            Escalation.milestone_id == session.current_milestone_id,
+            Escalation.status == "RESOLVED",
+            MentorDecision.action == "SEND_GUIDANCE",
+        )
+        .order_by(MentorDecision.created_at.desc())
+        .limit(2)
+    )
+    context["approved_guidance"] = [decision.text[:1500] for decision in approved]
     conflict_pair = task.policy.get("configured_conflict", [])
+    pinned_sha = project.commit_sha
+    # A human resolution applies to this session/milestone and exact pinned evidence.
+    # Do not reopen the same configured question on every subsequent learner turn.
+    resolved = db.scalars(
+        select(Escalation).where(
+            Escalation.session_id == session.id,
+            Escalation.milestone_id == session.current_milestone_id,
+            Escalation.reason == "SOURCE_CONFLICT",
+            Escalation.status == "RESOLVED",
+        )
+    )
+    for previous in resolved:
+        paths = {
+            item["path"]
+            for item in previous.evidence
+            if item["commit_sha"] == pinned_sha
+        }
+        if conflict_pair and set(conflict_pair) <= paths:
+            conflict_pair = []
+            context["resolved_consistency_question"] = previous.unresolved_question
+            break
     engine = db.get_bind()
     db.commit()  # Input/run are durable; release row locks before retrieval or network calls.
-    toolbox = SnapshotTools(engine, project_id, str(session_id))
+    toolbox = SnapshotTools(engine, project_id, str(session_id), pinned_sha)
     try:
         evidence = toolbox.search(query)
         context["evidence"] = evidence
@@ -285,11 +358,18 @@ def submit_input(db, user, session_id, body, key, kind, model):
                 or len(result.message) > 8000
             ):
                 raise ValueError("Invalid model milestone or output size")
-            verified = validate_citations(result, toolbox)
-            for path in result.proposed_file_paths:
-                if protected(path, context["policy"]["protected_paths"]):
-                    escalation_reason = "PROTECTED_PATH"
-            if result.action == "ESCALATE":
+            protected_proposal = any(
+                protected(path, context["policy"]["protected_paths"])
+                for path in result.proposed_file_paths
+            )
+            try:
+                verified = validate_citations(result, toolbox)
+            except ValueError:
+                if not protected_proposal:
+                    raise
+            if protected_proposal:
+                escalation_reason = "PROTECTED_PATH"
+            elif result.action == "ESCALATE":
                 if not result.escalation:
                     raise ValueError("Missing structured escalation")
                 escalation_reason = result.escalation.reason
@@ -307,7 +387,7 @@ def submit_input(db, user, session_id, body, key, kind, model):
             else:
                 review_context = {
                     **context,
-                    "evidence": list(toolbox.retrieved.values()),
+                    "evidence": verified,
                 }
                 review = model.review(review_context, result)
                 if (
@@ -321,6 +401,33 @@ def submit_input(db, user, session_id, body, key, kind, model):
         session = session_access(db, session_id, user, lock=True)
         run = db.get(AgentRun, run_id)
         operation = db.get(IdempotencyRequest, operation_id)
+        if (
+            run.status == "RUNNING" and run.expires_at <= now()
+        ) or run.error_category == "EXPIRED":
+            run.status, run.error_category, run.ended_at = "FAILED", "EXPIRED", now()
+            # An older expired call cannot finalize a new run for this saved input.
+            active = db.scalar(
+                select(AgentRun).where(
+                    AgentRun.session_id == session.id,
+                    AgentRun.status == "RUNNING",
+                    AgentRun.id != run.id,
+                )
+            )
+            if active:
+                db.commit()
+                raise AppError(
+                    409,
+                    "RUN_IN_PROGRESS",
+                    "A retry is already running for this saved input.",
+                )
+            operation.status = "FAILED"
+            db.commit()
+            raise AppError(
+                503,
+                "RUN_EXPIRED",
+                "Your input was saved. Retry with the same key or request a mentor.",
+                True,
+            )
         if (
             run.status != "RUNNING"
             or run.expires_at <= now()
@@ -435,7 +542,9 @@ def submit_input(db, user, session_id, body, key, kind, model):
         run.status, run.ended_at = "SUCCEEDED", now()
         touch(session)
         return finish_operation(db, operation, session, user)
-    except Exception:
+    except AppError:
+        raise
+    except Exception as error:
         db.rollback()
         db.expire_all()
         session = session_access(db, session_id, user, lock=True)
@@ -443,9 +552,23 @@ def submit_input(db, user, session_id, body, key, kind, model):
         operation = db.get(IdempotencyRequest, operation_id)
         if run.status != "RUNNING":
             return finish_operation(db, operation, session, user)
+        category = "COACH_FAILURE"
+        if isinstance(error, (httpx.TimeoutException, TimeoutError)):
+            category = "MODEL_TIMEOUT"
+        elif isinstance(error, httpx.HTTPStatusError):
+            category = {
+                401: "MODEL_AUTH",
+                403: "MODEL_AUTH",
+                429: "MODEL_RATE_LIMIT",
+                400: "MODEL_CONFIGURATION",
+            }.get(error.response.status_code, "MODEL_UPSTREAM")
+        elif isinstance(error, RuntimeError) and str(error) == "MODEL_NOT_CONFIGURED":
+            category = "MODEL_NOT_CONFIGURED"
+        elif isinstance(error, ValueError):
+            category = "MODEL_OUTPUT_INVALID"
         run.status, run.error_category, run.ended_at = (
             "FAILED",
-            "UPSTREAM_OR_VALIDATION",
+            category,
             now(),
         )
         operation.status = "FAILED"

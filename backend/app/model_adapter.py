@@ -59,6 +59,13 @@ def strict_schema(model):
     return schema
 
 
+def bounded_json(value, limit):
+    payload = json.dumps(value)
+    if len(payload) > limit:
+        raise ValueError("Model context budget exceeded")
+    return payload
+
+
 TOOLS = [
     {
         "type": "function",
@@ -160,7 +167,7 @@ class OpenAIResponses:
         deadline = time.monotonic() + 32
         inputs = [
             {"role": "system", "content": POLICY},
-            {"role": "user", "content": json.dumps(context)[:40000]},
+            {"role": "user", "content": bounded_json(context, 40000)},
         ]
         calls, repaired = 0, False
         for _ in range(6):
@@ -188,7 +195,7 @@ class OpenAIResponses:
                         {
                             "type": "function_call_output",
                             "call_id": call["call_id"],
-                            "output": json.dumps(output)[:16000],
+                            "output": bounded_json(output, 16000),
                         }
                     )
                 continue
@@ -216,9 +223,13 @@ class OpenAIResponses:
                 },
                 {
                     "role": "user",
-                    "content": json.dumps(
-                        {"context": context, "proposal": result.model_dump(mode="json")}
-                    )[:48000],
+                    "content": bounded_json(
+                        {
+                            "context": context,
+                            "proposal": result.model_dump(mode="json"),
+                        },
+                        48000,
+                    ),
                 },
             ],
             SupportReview,

@@ -1,7 +1,7 @@
-from datetime import datetime
-from typing import Literal
+from datetime import timezone
+from typing import Literal, Annotated
 from uuid import UUID
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, AfterValidator, AwareDatetime
 from app.enums import (
     Role,
     SessionState,
@@ -13,6 +13,10 @@ from app.enums import (
     RunStatus,
     Assessment,
 )
+
+UTCDateTime = Annotated[
+    AwareDatetime, AfterValidator(lambda value: value.astimezone(timezone.utc))
+]
 
 
 class Strict(BaseModel):
@@ -33,7 +37,7 @@ class UserOut(Strict):
 class LoginOut(Strict):
     access_token: str
     token_type: Literal["bearer"] = "bearer"
-    expires_at: datetime
+    expires_at: UTCDateTime
     user: UserOut
 
 
@@ -75,7 +79,7 @@ class MessageOut(Strict):
     author: MessageAuthor
     content: str
     citations: list[Citation]
-    created_at: datetime
+    created_at: UTCDateTime
 
 
 class AttemptOut(Strict):
@@ -87,7 +91,7 @@ class AttemptOut(Strict):
     test_output: str | None
     assessment: Assessment
     assessment_note: str
-    created_at: datetime
+    created_at: UTCDateTime
 
 
 class Activity(Strict):
@@ -95,7 +99,7 @@ class Activity(Strict):
     tool: str
     status: Literal["SUCCEEDED", "FAILED"]
     summary: str
-    created_at: datetime
+    created_at: UTCDateTime
 
 
 class EscalationSummary(Strict):
@@ -106,7 +110,7 @@ class EscalationSummary(Strict):
     reason: Reason
     status: CaseStatus
     revision: int
-    created_at: datetime
+    created_at: UTCDateTime
 
 
 class EscalationDetail(EscalationSummary):
@@ -127,7 +131,7 @@ class SessionSummary(Strict):
     learner_name: str
     state: SessionState
     version: int
-    updated_at: datetime
+    updated_at: UTCDateTime
 
 
 class RunOut(Strict):
@@ -147,7 +151,7 @@ class SessionDetail(Strict):
     activity: list[Activity]
     open_escalation: EscalationDetail | None
     latest_run: RunOut | None
-    updated_at: datetime
+    updated_at: UTCDateTime
 
 
 class TaskList(Strict):

@@ -5,7 +5,7 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from sqlalchemy import text
+from sqlalchemy import text, inspect
 from sqlalchemy.exc import SQLAlchemyError
 from starlette.exceptions import HTTPException
 from alembic.config import Config
@@ -14,12 +14,13 @@ from alembic.script import ScriptDirectory
 from app.config import get_settings
 from app.db import get_engine
 from app.errors import AppError
-from app.model_adapter import OpenAIResponses
+from app.model_factory import configured_model
+from app.models import Base
 
 
 def create_app() -> FastAPI:
     app = FastAPI(title="RampUp", version="0.1.0")
-    app.state.model = OpenAIResponses()
+    app.state.model = configured_model()
 
     @app.middleware("http")
     async def request_id(request: Request, call_next):
@@ -100,7 +101,10 @@ def create_app() -> FastAPI:
                 ).scalar()
                 if revision != expected:
                     raise ValueError("Schema not ready")
-                connection.execute(text("SELECT id FROM users LIMIT 1"))
+                if not set(Base.metadata.tables) <= set(
+                    inspect(connection).get_table_names()
+                ):
+                    raise ValueError("Schema tables missing")
         except Exception:
             return JSONResponse(status_code=503, content={"status": "not_ready"})
         return {"status": "ready"}

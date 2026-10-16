@@ -47,8 +47,10 @@ class GitHubREST:
     def __init__(
         self, owner: str, repo: str, paths: list[str], token: str = "", transport=None
     ):
-        if not re.fullmatch(r"[A-Za-z0-9_.-]+", owner) or not re.fullmatch(
-            r"[A-Za-z0-9_.-]+", repo
+        if (
+            not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9-]{0,38}", owner)
+            or not re.fullmatch(r"[A-Za-z0-9_.-]+", repo)
+            or repo in (".", "..")
         ):
             raise ValueError("Invalid repository metadata")
         self.owner, self.repo = owner, repo
@@ -158,10 +160,10 @@ def citation(source, project, start=None, end=None):
     }
 
 
-def search_sources(db, project, query, limit=8):
+def search_sources(db, project, query, limit=8, commit_sha=None):
     base = select(SourceChunk).where(
         SourceChunk.project_id == project.id,
-        SourceChunk.commit_sha == project.commit_sha,
+        SourceChunk.commit_sha == (commit_sha or project.commit_sha),
     )
     text_query = func.plainto_tsquery("simple", query[:1000])
     found = list(
