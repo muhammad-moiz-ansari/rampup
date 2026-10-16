@@ -24,6 +24,8 @@ All application endpoints are implemented now. Readiness returns 503 if database
 
 Vite proxies `/api` to `http://localhost:8000`; production uses same-origin `/api/v1` and compiled assets served by FastAPI. Backend requests may take 45 seconds; use a 60-second client timeout.
 
+Working public backend: `https://alternate-cloudy-serpent-6983-docker-app.alternatefutures.ai`. Public logins and mentor handoff are verified. For local frontend development against that backend, your frontend branch can point Vite's /api proxy at this HTTPS origin with `changeOrigin: true` and certificate validation enabled; use the existing /api/v1 paths. Keep all model/database credentials server-side. The published frontend is still the initial placeholder until your UI PR is integrated.
+
 One milestone for the initial task. Only mentor completion decisions finish a task. Pending case proposals are redacted to an empty string for learners; never display internal draft guidance from mentor fixtures to learners.
 
 Prioritize learner login/task/session → manual mentor request → mentor queue/case → edited guidance → learner resume. Then add cited coach/attempt input and completion review. The initial task has one milestone, `validation`.

@@ -70,7 +70,7 @@ Checks run backend PostgreSQL tests, frontend type check/build and the Docker bu
 
 In the existing Alternate Futures project, select the container image, port/PORT 8000, and set DATABASE_URL, DATABASE_DIRECT_URL, JWT_SECRET, LLM_API_KEY, LLM_MODEL and repository configuration securely. Do not assume a private GHCR package can be pulled anonymously; configure authorized registry access or deliberately make the package public in your account. No package visibility or paid infrastructure change is automated here.
 
-Current release and user deployment handoff are recorded in `docs/setup-required.md`. The user is handling the dashboard deployment personally. Runtime variables are already imported; public cloud acceptance is still pending. Do not infer success from an ACTIVE badge alone, or start a fallback provider without authorization.
+Current release and verified public deployment are recorded in `docs/setup-required.md`. After explicit user approval, the same image now runs on Standard compute; public health/readiness, compiled assets, both logins, mentor handoff and real container GitHub indexing passed. Runtime variables are imported. Fresh cloud model and cloud-redeploy persistence checks remain pending. Do not infer those results from an ACTIVE badge alone, or change provider/security settings without authorization.
 
 After deployment: check health/readiness, deliberately seed once, index real sources, log in as learner and mentor, open a case, restart/redeploy, verify the same case survives, send edited guidance, and approve completion. Record the HTTPS URL, deployed commit/image and observed live model/GitHub results. Local PostgreSQL verification does not establish Neon/cloud connectivity.
 
