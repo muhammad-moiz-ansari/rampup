@@ -9,8 +9,8 @@ Python 3.12 / FastAPI / PostgreSQL 17 backend; React / TypeScript / Vite / Tailw
 From the repository root in PowerShell:
 
 ```powershell
-Copy-Item .env.example .env
-# Edit .env with random local secrets and passwords first.
+if (-not (Test-Path -LiteralPath .env)) { Copy-Item .env.example .env }
+# For a fresh setup, edit .env with random local secrets and passwords first.
 uv venv --python 3.12 .venv
 uv pip install --python .venv/Scripts/python.exe -r backend/requirements-dev.txt
 docker compose up -d db
