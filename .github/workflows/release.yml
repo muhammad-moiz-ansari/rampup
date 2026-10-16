@@ -1,0 +1,32 @@
+name: Release image
+on:
+  workflow_run:
+    workflows: [Checks]
+    types: [completed]
+    branches: [main]
+permissions:
+  contents: read
+  packages: write
+jobs:
+  publish:
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set immutable tag
+        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}:sha-${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_ENV"
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64
+          tags: ${{ env.IMAGE }}
+          labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
