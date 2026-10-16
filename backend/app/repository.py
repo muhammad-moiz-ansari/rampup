@@ -172,7 +172,37 @@ def search_sources(db, project, query, limit=8, commit_sha=None):
         )
     )
     if len(found) < limit:
-        terms = re.findall(r"[A-Za-z_][A-Za-z0-9_]{2,}", query)[:10]
+        stopwords = {
+            "the",
+            "and",
+            "for",
+            "with",
+            "what",
+            "does",
+            "how",
+            "can",
+            "you",
+            "this",
+            "that",
+            "have",
+            "give",
+            "from",
+            "about",
+            "are",
+            "not",
+            "please",
+            "should",
+            "would",
+            "could",
+            "into",
+            "tell",
+            "which",
+        }
+        terms = [
+            term
+            for term in re.findall(r"[A-Za-z_][A-Za-z0-9_]{2,}", query)
+            if term.casefold() not in stopwords
+        ][:10]
         if terms:
             matches = or_(
                 *(
