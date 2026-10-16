@@ -1,0 +1,19 @@
+{
+  "id": "00000000-0000-4000-8000-000000000003",
+  "session_id": "00000000-0000-4000-8000-000000000002",
+  "task_title": "Add inventory quantity updates",
+  "learner_name": "Demo Learner",
+  "reason": "MANUAL",
+  "status": "OPEN",
+  "revision": 1,
+  "created_at": "2026-10-16T18:00:00Z",
+  "learner_question": "Which source should I follow?",
+  "milestone_id": "validation",
+  "summary": "Learner requested a mentor.",
+  "unresolved_question": "Which source should I follow?",
+  "evidence": [],
+  "attempts": [],
+  "prior_hints": [],
+  "proposed_guidance": "",
+  "mentor_messages": []
+}
