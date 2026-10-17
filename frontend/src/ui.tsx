@@ -474,6 +474,15 @@ export function ActivityList({ activity }: { activity: Activity[] }) {
 }
 export function TaskBrief({ task, session }: { task: Task; session?: Session }) {
   const [activityOpen, setActivityOpen] = useState(false)
+  const descriptionBlocks = task.description
+    .split(/\n\s*\n/)
+    .map((block) => {
+      const match = /^([^:\n]{2,40}):\s*([\s\S]*)$/.exec(block.trim())
+      return match
+        ? { heading: match[1], content: match[2] }
+        : { heading: '', content: block.trim() }
+    })
+    .filter((block) => block.content)
   const mode = {
     HINTS: 'Progressive hints',
     CONCEPTS: 'Concept explanations',
@@ -483,7 +492,14 @@ export function TaskBrief({ task, session }: { task: Task; session?: Session }) 
     <aside className="task-brief">
       <section>
         <h2>The task</h2>
-        <p>{task.description}</p>
+        <div className="task-description-blocks">
+          {descriptionBlocks.map((block, index) => (
+            <div className="task-description-block" key={`${block.heading}-${index}`}>
+              {block.heading && <h4>{block.heading}</h4>}
+              <p>{block.content}</p>
+            </div>
+          ))}
+        </div>
       </section>
       <section>
         <h3>Milestones</h3>

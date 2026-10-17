@@ -327,7 +327,11 @@ function Shell({
               href={`#${link.href}`}
               className={`nav-link ${link.active ? 'active' : ''}`}
               aria-current={link.active ? 'page' : undefined}
-              onClick={() => setMenu(false)}
+              onClick={(event) => {
+                event.preventDefault()
+                navigate(link.href)
+                setMenu(false)
+              }}
             >
               <Icon name={link.icon} />
               <span>{link.label}</span>
@@ -482,7 +486,7 @@ function Tasks({ user }: { user: User }) {
                 <h2>
                   <a href={`#/task/${task.id}`}>{task.title}</a>
                 </h2>
-                <p>{task.description}</p>
+                <p>{taskSummary(task.description)}</p>
                 <div className="task-row-bottom">
                   <span>
                     <Icon name="task" size={14} />
@@ -519,6 +523,11 @@ function Tasks({ user }: { user: User }) {
       )}
     </div>
   )
+}
+
+function taskSummary(description: string) {
+  const firstBlock = description.split(/\n\s*\n/, 1)[0].trim()
+  return firstBlock.replace(/^Problem:\s*/i, '')
 }
 
 function TaskDetails({ id, user }: { id: string; user: User }) {

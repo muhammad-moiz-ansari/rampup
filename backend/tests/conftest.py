@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 from app.config import get_settings
 from app.db import get_db, postgres_url, get_engine
 from app.main import create_app
-from scripts.seed_demo import seed
+from scripts.seed_demo import seed, TASK
 from app.models import User, Project, SourceChunk, Task, uid
 from app.model_adapter import CoachResult, SupportReview
 
@@ -156,7 +156,7 @@ def system(pg_engine):
             "Idempotency-Key": key or str(uuid4()),
         }
 
-    task_id = client.get("/api/v1/tasks", headers=headers()).json()["items"][0]["id"]
+    task_id = TASK
     response = client.post(
         "/api/v1/sessions", headers=headers(), json={"task_id": task_id}
     )
