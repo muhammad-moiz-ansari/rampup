@@ -3,8 +3,32 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "engines": { "node": ">=24 <25" },
-  "scripts": { "dev": "vite", "typecheck": "tsc --noEmit", "build": "tsc --noEmit && vite build", "preview": "vite preview" },
-  "dependencies": { "react": "^19.1.0", "react-dom": "^19.1.0" },
-  "devDependencies": { "@tailwindcss/vite": "^4.1.0", "@types/react": "^19.1.0", "@types/react-dom": "^19.1.0", "@vitejs/plugin-react": "^4.4.1", "tailwindcss": "^4.1.0", "typescript": "~5.8.3", "vite": "^6.3.0" }
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "dev": "vite",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test tests/*.test.mjs",
+    "format": "prettier --write src tests vite.config.ts index.html",
+    "format:check": "prettier --check src tests vite.config.ts index.html",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@fontsource/ibm-plex-mono": "^5.3.0",
+    "@fontsource/pixelify-sans": "^5.3.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@vitejs/plugin-react": "^4.4.1",
+    "prettier": "^3.9.10",
+    "tailwindcss": "^4.1.0",
+    "typescript": "~5.8.3",
+    "vite": "^6.3.0"
+  }
 }

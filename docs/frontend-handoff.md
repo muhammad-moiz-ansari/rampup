@@ -1,5 +1,7 @@
 # Frontend handoff
 
+The complete learner/mentor UI and terminal redesign are implemented on `codex/frontend-workspaces`. See `docs/frontend-notes.md` for current features, verification and remaining deployment work, and `docs/demo-script.md` for the walkthrough. The earlier placeholder/ownership notes below describe the original handoff, before the owner explicitly requested frontend implementation.
+
 Shared backend code is on `main`, through merge commit `c5a667f7b220c2cede6c6b3ea907dd8d783a3a6c`. All application endpoints in `contracts/api-contract.md` are implemented; generated schemas are in `contracts/openapi.json`. Bootstrap commit was `205853879753a07199575db0ce6a9f5af9fa53b6` (PR #1); backend PRs #2–#4 also passed checks and merged normally.
 
 You own `frontend/**`, `docs/frontend-notes.md`, and `docs/demo-script.md`. Backend changes will preserve those paths after this initial starter.
