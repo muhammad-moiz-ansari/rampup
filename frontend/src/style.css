@@ -503,6 +503,21 @@ blockquote {
   letter-spacing: -0.045em;
 }
 
+.demo-role-actions {
+  display: grid;
+  gap: 12px;
+  margin-top: 30px;
+}
+
+.demo-mode {
+  margin-left: auto;
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  color: var(--green);
+  font-size: 12px;
+  letter-spacing: 0;
+}
+
 .login-description {
   font-size: 13px;
   color: var(--muted);
@@ -543,7 +558,7 @@ blockquote {
   margin-top: 30px;
   padding-top: 21px;
   color: #d8ddd3;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .login-account-note>svg {
@@ -553,7 +568,7 @@ blockquote {
 
 .login-form-footer {
   color: #d8ddd3;
-  font-size: 11px;
+  font-size: 12px;
   text-align: center;
 }
 
@@ -659,7 +674,7 @@ blockquote {
   gap: 11px;
   align-items: center;
   color: #d8ddd3;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.7;
 }
 
@@ -687,7 +702,7 @@ blockquote {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   flex-shrink: 0;
 }
@@ -698,7 +713,7 @@ blockquote {
 
 .profile strong {
   display: block;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -708,7 +723,7 @@ blockquote {
 
 .profile>div>span {
   display: block;
-  font-size: 10px;
+  font-size: 12px;
   color: #d8ddd3;
   margin-top: 1px;
 }
@@ -730,7 +745,7 @@ blockquote {
   align-items: center;
   justify-content: space-between;
   color: #d8ddd3;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .topbar-location {
@@ -749,7 +764,7 @@ blockquote {
   gap: 7px;
   align-items: center;
   color: #d8ddd3;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .live-dot {
@@ -822,7 +837,7 @@ blockquote {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  font-size: 11px;
+  font-size: 12px;
   color: #d8ddd3;
   margin-bottom: 13px;
 }
@@ -842,7 +857,7 @@ blockquote {
   flex-wrap: wrap;
   gap: 8px;
   color: #d8ddd3;
-  font-size: 11px;
+  font-size: 12px;
   margin-top: 11px;
 }
 
@@ -855,7 +870,7 @@ blockquote {
   border-left: 1px solid var(--line);
   padding-left: 9px;
   margin-left: 2px;
-  font-size: 10px;
+  font-size: 12px;
   color: #d8ddd3;
 }
 
@@ -911,7 +926,7 @@ blockquote {
 }
 
 .task-count {
-  font-size: 11px;
+  font-size: 12px;
   color: #d8ddd3;
   padding-top: 13px;
 }
@@ -954,11 +969,11 @@ blockquote {
   gap: 7px;
   align-items: center;
   color: #d8ddd3;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .task-mode {
-  font-size: 10px;
+  font-size: 12px;
   color: #d8ddd3;
   border-left: 1px solid #343c31;
   padding-left: 13px;
@@ -990,7 +1005,7 @@ blockquote {
   gap: 25px;
   align-items: center;
   margin-top: 23px;
-  font-size: 10px;
+  font-size: 12px;
   color: #d8ddd3;
 }
 
@@ -1177,7 +1192,7 @@ blockquote {
 .task-policy-note {
   display: flex;
   gap: 10px;
-  font-size: 11px;
+  font-size: 12px;
   color: #d8ddd3;
   border-top: 1px solid #343c31;
   padding-top: 20px;
@@ -1206,7 +1221,7 @@ blockquote {
   display: flex;
   align-items: center;
   gap: 16px;
-  font-size: 10px;
+  font-size: 12px;
   color: #d8ddd3;
   margin-bottom: 19px;
 }
@@ -1220,7 +1235,7 @@ blockquote {
   display: inline-flex;
   gap: 7px;
   align-items: center;
-  font-size: 11px;
+  font-size: 12px;
   color: #d8ddd3;
 }
 
@@ -1274,7 +1289,7 @@ blockquote {
   background: var(--paper);
   border: 1px solid #343c31;
   border-radius: 3px;
-  height: max(570px, calc(100dvh - 282px));
+  height: max(700px, calc(100dvh - 220px));
   max-height: 1100px;
   display: flex;
   flex-direction: column;
@@ -1353,7 +1368,7 @@ blockquote {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .message-ai .message-avatar {
@@ -1376,7 +1391,7 @@ blockquote {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 11px;
+  font-size: 12px;
   margin-bottom: 8px;
   flex-wrap: wrap;
 }
@@ -1386,7 +1401,7 @@ blockquote {
 }
 
 .message-body>header>time {
-  font-size: 9px;
+  font-size: 12px;
   color: #d8ddd3;
   margin-left: auto;
 }
@@ -1411,7 +1426,7 @@ blockquote {
 }
 
 .mentor-label {
-  font-size: 9px;
+  font-size: 12px;
   color: #d8ddd3;
   padding-left: 8px;
   border-left: 1px solid #343c31;
@@ -1422,7 +1437,7 @@ blockquote {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  font-size: 10px;
+  font-size: 12px;
   color: #d8ddd3;
   margin: 20px 0;
   overflow-wrap: anywhere;
@@ -1511,12 +1526,37 @@ blockquote {
   color: #d8ddd3;
   background: none;
   border: 0;
-  font-size: 10px;
+  font-size: 12px;
   padding: 7px 0;
 }
 
 .starter-questions>button:hover {
   color: #d8ddd3;
+}
+
+.scripted-step {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  padding: 12px 0;
+}
+
+.scripted-step p,
+.scripted-attempt-note>span {
+  color: #a8b09f;
+  font-size: 12px;
+}
+
+.scripted-step .button {
+  min-height: 42px;
+}
+
+.scripted-attempt-note {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
 }
 
 .handoff-banner {
@@ -1541,7 +1581,7 @@ blockquote {
 }
 
 .handoff-banner p {
-  font-size: 11px;
+  font-size: 12px;
   color: #d8ddd3;
   line-height: 1.7;
   margin-top: 4px;
@@ -1567,7 +1607,7 @@ blockquote {
 }
 
 .completed-banner p {
-  font-size: 11px;
+  font-size: 12px;
   margin-top: 5px;
 }
 
@@ -1613,7 +1653,7 @@ blockquote {
   gap: 10px;
   padding: 7px 10px 10px 14px;
   color: #d8ddd3;
-  font-size: 9px;
+  font-size: 12px;
 }
 
 .keyboard-hint {
@@ -1655,12 +1695,12 @@ blockquote {
 }
 
 .workspace-bottom .text-button {
-  font-size: 10px;
+  font-size: 12px;
   color: #d8ddd3;
 }
 
 .coach-progress {
-  font-size: 11px;
+  font-size: 12px;
   display: flex;
   gap: 9px;
   align-items: center;
@@ -1670,8 +1710,59 @@ blockquote {
 }
 
 .coach-progress>.muted {
-  font-size: 10px;
+  font-size: 12px;
   margin-left: auto;
+}
+
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 11px 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.typing-indicator>span:first-child {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.typing-indicator i {
+  display: inline-flex;
+  gap: 3px;
+  margin-left: 2px;
+}
+
+.typing-indicator b {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: typing-pulse 1s infinite ease-in-out;
+}
+
+.typing-indicator b:nth-child(2) {
+  animation-delay: 120ms;
+}
+
+.typing-indicator b:nth-child(3) {
+  animation-delay: 240ms;
+}
+
+@keyframes typing-pulse {
+
+  0%,
+  60%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+
+  30% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
 }
 
 .task-brief {
@@ -1695,7 +1786,7 @@ blockquote {
 
 .task-brief>section>p {
   color: #d8ddd3;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.85;
 }
 
@@ -1710,7 +1801,7 @@ blockquote {
 }
 
 .milestone-heading strong {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 550;
   color: #d8ddd3;
   line-height: 1.8;
@@ -1725,7 +1816,7 @@ blockquote {
   border: 1px solid #343c31;
   border-radius: 50%;
   color: #d8ddd3;
-  font-size: 8px;
+  font-size: 12px;
   flex-shrink: 0;
   margin-top: 1px;
   background: #151715;
@@ -1741,7 +1832,7 @@ blockquote {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  font-size: 10px;
+  font-size: 12px;
   color: #d8ddd3;
   margin-bottom: 11px;
   line-height: 1.75;
@@ -1769,13 +1860,13 @@ blockquote {
 }
 
 .brief-policy>.muted {
-  font-size: 10px;
+  font-size: 12px;
   color: #d8ddd3;
 }
 
 .protected-path {
   display: block;
-  font-size: 9px;
+  font-size: 12px;
   color: #d8ddd3;
   background: #151715;
   border-radius: 3px;
@@ -1790,7 +1881,7 @@ blockquote {
   align-items: flex-start;
   gap: 8px;
   padding-top: 20px;
-  font-size: 9px;
+  font-size: 12px;
   color: #d8ddd3;
   line-height: 1.8;
 }
@@ -1801,11 +1892,11 @@ blockquote {
 }
 
 .brief-footnote code {
-  font-size: 9px;
+  font-size: 12px;
 }
 
 .activity-link {
-  font-size: 10px;
+  font-size: 12px;
   margin-top: 17px;
   color: #d8ddd3;
   gap: 7px;
@@ -1838,7 +1929,7 @@ blockquote {
   border: 1px solid #343c31;
   border-radius: 3px;
   padding: 5px 7px;
-  font-size: 9px;
+  font-size: 12px;
   color: #d8ddd3;
   max-width: 100%;
 }
@@ -1858,7 +1949,7 @@ blockquote {
 .citation-range {
   border-left: 1px solid #343c31;
   padding-left: 6px;
-  font-size: 8px;
+  font-size: 12px;
 }
 
 .source-excerpt {
@@ -1874,7 +1965,7 @@ blockquote {
   align-items: center;
   gap: 8px;
   padding: 11px 13px;
-  font-size: 11px;
+  font-size: 12px;
   color: #d8ddd3;
   border-bottom: 1px solid #343c31;
   background: #151715;
@@ -1886,7 +1977,7 @@ blockquote {
   flex: 1;
   min-width: 0;
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .source-heading>svg {
@@ -1895,13 +1986,13 @@ blockquote {
 
 .source-heading>.mono {
   flex-shrink: 0;
-  font-size: 9px;
+  font-size: 12px;
   color: #d8ddd3;
 }
 
 .source-excerpt pre {
   padding: 14px 0;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.8;
   max-height: 390px;
 }
@@ -1918,13 +2009,13 @@ blockquote {
   padding-right: 13px;
   user-select: none;
   flex-shrink: 0;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .code-line>code {
   padding-right: 17px;
   color: #d8ddd3;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .source-excerpt footer {
@@ -1934,12 +2025,12 @@ blockquote {
   gap: 10px;
   padding: 9px 13px;
   border-top: 1px solid #343c31;
-  font-size: 9px;
+  font-size: 12px;
   color: #d8ddd3;
 }
 
 .source-excerpt footer code {
-  font-size: 9px;
+  font-size: 12px;
 }
 
 .source-excerpt footer a {
@@ -1963,7 +2054,7 @@ blockquote {
 }
 
 .source-history>p {
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .attempt-entry {
@@ -1994,7 +2085,7 @@ summary::-webkit-details-marker {
   display: flex;
   gap: 8px;
   align-items: center;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   color: #d8ddd3;
 }
@@ -2005,7 +2096,7 @@ summary::-webkit-details-marker {
 
 .assessment {
   margin-left: auto;
-  font-size: 9px;
+  font-size: 12px;
   color: #d8ddd3;
 }
 
@@ -2019,7 +2110,7 @@ summary::-webkit-details-marker {
 }
 
 .attempt-content>p {
-  font-size: 11px;
+  font-size: 12px;
   color: #d8ddd3;
   margin-top: 15px;
   line-height: 1.8;
@@ -2033,7 +2124,7 @@ summary::-webkit-details-marker {
 }
 
 .file-paths>code {
-  font-size: 9px;
+  font-size: 12px;
   background: #151715;
   padding: 4px 7px;
   border-radius: 3px;
@@ -2052,11 +2143,11 @@ summary::-webkit-details-marker {
 }
 
 .attempt-content pre code {
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .attempt-content>time {
-  font-size: 9px;
+  font-size: 12px;
   color: #d8ddd3;
   display: block;
   margin-top: 17px;
@@ -2070,12 +2161,12 @@ summary::-webkit-details-marker {
 
 .assessment-note {
   margin-top: 15px;
-  font-size: 11px;
+  font-size: 12px;
   color: #d8ddd3;
 }
 
 .assessment-note strong {
-  font-size: 10px;
+  font-size: 12px;
   color: #d8ddd3;
   font-weight: 550;
 }
@@ -2094,7 +2185,7 @@ summary::-webkit-details-marker {
   align-items: center;
   justify-content: space-between;
   padding: 14px 0 19px;
-  font-size: 11px;
+  font-size: 12px;
   gap: 12px;
 }
 
@@ -2109,7 +2200,7 @@ summary::-webkit-details-marker {
   background: transparent;
   border-radius: 3px;
   padding: 7px 12px;
-  font-size: 11px;
+  font-size: 12px;
   color: #d8ddd3;
 }
 
@@ -2138,7 +2229,7 @@ summary::-webkit-details-marker {
 .queue-labels {
   padding: 12px 18px;
   color: #d8ddd3;
-  font-size: 10px;
+  font-size: 12px;
   border-bottom: 1px solid #343c31;
 }
 
@@ -2175,7 +2266,7 @@ summary::-webkit-details-marker {
 .queue-row>div>div>span {
   display: block;
   margin-top: 5px;
-  font-size: 10px;
+  font-size: 12px;
   color: #d8ddd3;
 }
 
@@ -2195,7 +2286,7 @@ summary::-webkit-details-marker {
 .person-avatar.small {
   width: 22px;
   height: 22px;
-  font-size: 9px;
+  font-size: 12px;
 }
 
 .queue-reason {
@@ -2203,7 +2294,7 @@ summary::-webkit-details-marker {
   align-items: center;
   gap: 7px;
   color: #d8ddd3;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .reason-dot {
@@ -2225,7 +2316,7 @@ summary::-webkit-details-marker {
 }
 
 .queue-row>time {
-  font-size: 10px;
+  font-size: 12px;
   color: #d8ddd3;
 }
 
@@ -2237,7 +2328,7 @@ summary::-webkit-details-marker {
   display: flex;
   align-items: center;
   gap: 7px;
-  font-size: 10px;
+  font-size: 12px;
   color: #d8ddd3;
   margin-top: 24px;
 }
@@ -2274,7 +2365,7 @@ summary::-webkit-details-marker {
 
 .completion-callout>div>span {
   display: block;
-  font-size: 10px;
+  font-size: 12px;
   color: #d8ddd3;
   margin-top: 4px;
 }
@@ -2293,7 +2384,7 @@ summary::-webkit-details-marker {
   align-items: center;
   gap: 8px;
   color: #d8ddd3;
-  font-size: 11px;
+  font-size: 12px;
   margin-top: 13px;
 }
 
@@ -2360,7 +2451,7 @@ summary::-webkit-details-marker {
 }
 
 .review-section h3>span {
-  font-size: 10px;
+  font-size: 12px;
   color: #d8ddd3;
   font-weight: 400;
   float: right;
@@ -2399,7 +2490,7 @@ summary::-webkit-details-marker {
   align-items: center;
   justify-content: space-between;
   list-style: none;
-  font-size: 11px;
+  font-size: 12px;
   color: #d8ddd3;
   padding: 19px 0 0;
   cursor: pointer;
@@ -2446,14 +2537,14 @@ summary::-webkit-details-marker {
 .decision-intro>p,
 .decision-panel>p {
   color: #d8ddd3;
-  font-size: 11px;
+  font-size: 12px;
   margin-top: 11px;
   line-height: 1.8;
 }
 
 .decision-panel label {
   color: #d8ddd3;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .decision-panel form>label:first-child {
@@ -2461,7 +2552,7 @@ summary::-webkit-details-marker {
 }
 
 .decision-panel select {
-  font-size: 11px;
+  font-size: 12px;
   border-color: #343c31;
   color: #d8ddd3;
   background: #151715;
@@ -2471,7 +2562,7 @@ summary::-webkit-details-marker {
   background: #151715;
   border-color: #343c31;
   color: #d8ddd3;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.85;
 }
 
@@ -2480,7 +2571,7 @@ summary::-webkit-details-marker {
 }
 
 .action-description {
-  font-size: 10px;
+  font-size: 12px;
   color: #d8ddd3;
   line-height: 1.8;
   margin-top: 11px;
@@ -2488,7 +2579,7 @@ summary::-webkit-details-marker {
 
 .decision-panel .field-help {
   color: #d8ddd3;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .decision-panel .button.primary {
@@ -2505,7 +2596,7 @@ summary::-webkit-details-marker {
 
 .decision-footnote {
   color: #d8ddd3;
-  font-size: 9px;
+  font-size: 12px;
   text-align: center;
   line-height: 1.8;
   margin-top: 13px;
@@ -2515,7 +2606,7 @@ summary::-webkit-details-marker {
   display: flex;
   flex-wrap: wrap;
   padding: 10px;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .decision-panel .notice-action {
@@ -2523,7 +2614,7 @@ summary::-webkit-details-marker {
 }
 
 .decision-panel .notice .text-button {
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .resolved-panel {
@@ -2543,7 +2634,7 @@ summary::-webkit-details-marker {
 }
 
 .resolved-panel p {
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.8;
   color: #d8ddd3;
 }
@@ -2572,7 +2663,7 @@ summary::-webkit-details-marker {
 }
 
 .section-heading>span {
-  font-size: 9px;
+  font-size: 12px;
   color: #d8ddd3;
 }
 
@@ -2605,13 +2696,13 @@ summary::-webkit-details-marker {
 }
 
 .completion-decision .review-criteria li {
-  font-size: 11px;
+  font-size: 12px;
   color: #d8ddd3;
 }
 
 .return-button {
   margin-top: 10px;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .activity-list {
@@ -2661,7 +2752,7 @@ summary::-webkit-details-marker {
 .activity-list li>div>span {
   display: block;
   color: #d8ddd3;
-  font-size: 9px;
+  font-size: 12px;
   margin-top: 5px;
 }
 
@@ -2881,7 +2972,7 @@ dialog label,
 }
 
 .message-body>header>time {
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .task-row-main>p,
@@ -2940,7 +3031,7 @@ dialog label,
 .brief-footnote,
 .protected-path,
 .activity-link {
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .queue-row strong {
@@ -2998,7 +3089,7 @@ dialog label,
 .source-excerpt footer code,
 .citation,
 .citation-range {
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .composer textarea {
@@ -3007,13 +3098,13 @@ dialog label,
 
 .composer-footer,
 .workspace-bottom .text-button {
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .task-row-bottom,
 .task-repository,
 .task-mode {
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .profile strong {
@@ -3022,7 +3113,7 @@ dialog label,
 
 .profile>div>span,
 .workspace-note {
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .decision-panel textarea::placeholder,
@@ -3120,7 +3211,7 @@ dialog textarea::placeholder {
   }
 
   .task-row .button {
-    font-size: 11px;
+    font-size: 12px;
     padding: 9px 12px;
   }
 
@@ -3132,7 +3223,7 @@ dialog textarea::placeholder {
 
 @media (max-width: 1000px) {
   .learning-panel {
-    height: max(580px, calc(100dvh - 280px));
+    height: max(700px, calc(100dvh - 220px));
   }
 
   .mentor-grid {
@@ -3381,8 +3472,8 @@ dialog textarea::placeholder {
   }
 
   .learning-panel {
-    min-height: 600px;
-    height: calc(100dvh - 290px);
+    min-height: 700px;
+    height: calc(100dvh - 230px);
   }
 
   .panel-tabs {
@@ -3391,7 +3482,7 @@ dialog textarea::placeholder {
   }
 
   .panel-tabs>button {
-    font-size: 11px;
+    font-size: 12px;
     padding-top: 15px;
     padding-bottom: 13px;
   }
@@ -3414,7 +3505,7 @@ dialog textarea::placeholder {
   }
 
   .message-body>header>time {
-    font-size: 8px;
+    font-size: 12px;
   }
 
   .mentor-label {
@@ -3458,7 +3549,7 @@ dialog textarea::placeholder {
   }
 
   .handoff-banner p {
-    font-size: 10px;
+    font-size: 12px;
   }
 
   .conversation-start {
@@ -3534,7 +3625,7 @@ dialog textarea::placeholder {
   }
 
   .queue-page .page-heading>.button {
-    font-size: 11px;
+    font-size: 12px;
     padding: 9px 12px;
     min-height: 36px;
   }
@@ -3545,7 +3636,7 @@ dialog textarea::placeholder {
 
   .filter-switch>button {
     padding: 7px 9px;
-    font-size: 10px;
+    font-size: 12px;
   }
 
   .queue-labels {
@@ -3574,7 +3665,7 @@ dialog textarea::placeholder {
 
   .queue-row>time {
     grid-column: 1;
-    font-size: 9px;
+    font-size: 12px;
     margin-left: 46px;
   }
 
@@ -3588,11 +3679,11 @@ dialog textarea::placeholder {
   }
 
   .completion-callout strong {
-    font-size: 11px;
+    font-size: 12px;
   }
 
   .completion-callout>div>span {
-    font-size: 10px;
+    font-size: 12px;
   }
 
   .review-content {
@@ -3624,7 +3715,7 @@ dialog textarea::placeholder {
   }
 
   .source-heading>span:first-of-type {
-    font-size: 10px;
+    font-size: 12px;
   }
 
   .source-history,
@@ -3646,7 +3737,7 @@ dialog textarea::placeholder {
   }
 
   .assessment {
-    font-size: 8px;
+    font-size: 12px;
   }
 
   .decision-panel {
@@ -3655,7 +3746,7 @@ dialog textarea::placeholder {
 
   .notice {
     flex-wrap: wrap;
-    font-size: 11px;
+    font-size: 12px;
   }
 
   .notice-action {
@@ -3988,7 +4079,7 @@ dialog textarea::placeholder {
 }
 
 .message-body>header>time {
-  font-size: 11px;
+  font-size: 12px;
   color: #a6af9f;
 }
 
@@ -4201,7 +4292,7 @@ dialog::backdrop {
 .source-excerpt footer code,
 .citation,
 .citation-range {
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .handoff-banner p {

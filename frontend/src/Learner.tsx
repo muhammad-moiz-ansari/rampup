@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { api } from './api'
+import { TASK_ONE_SAMPLE_ATTEMPT, TASK_ONE_SCRIPT, taskOneQuestionCount } from './demo-api'
 import { newestSession, useDraft, useOperation, useResource } from './hooks'
 import type { Session, User } from './types'
 import {
@@ -59,6 +60,8 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
 
   const active = session.state === 'ACTIVE'
   const finished = session.state === 'COMPLETED'
+  const scriptedTaskOne = session.task.id === 'demo-task-1'
+  const scriptedQuestionsAnswered = scriptedTaskOne ? taskOneQuestionCount(session.messages) : 0
   const running = coach.busy || session.latest_run?.status === 'RUNNING'
   const coachBlocked = running || Boolean(coach.pending)
   const messageOperation = active ? coach : clarification
@@ -76,14 +79,15 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
           item.end_line === source.end_line,
       ) === index,
   )
-  async function sendQuestion(event: FormEvent) {
-    event.preventDefault()
-    if (!question.trim() || messageBlocked || finished) return
+  const starterQuestions =
+    scriptedTaskOne ? [] : ['Where should quantity validation live?']
+  async function deliverQuestion(content: string) {
+    if (!content.trim() || messageBlocked || finished) return
     setRequestFeedback({ tone: 'info', text: 'Sending your question to RampUp…' })
     setView('conversation')
     const outcome = await messageOperation.run(
       `/sessions/${id}/messages`,
-      { content: question.trim() },
+      { content: content.trim() },
       active ? 'question' : 'clarification',
     )
     if (outcome !== 'failed') {
@@ -91,15 +95,15 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
       setRequestFeedback(
         outcome === 'saved'
           ? {
-              tone: 'info',
-              text: 'Your question was saved, but RampUp could not prepare a reply. See the error above to retry or ask your mentor.',
-            }
+            tone: 'info',
+            text: 'Your question was saved, but RampUp could not prepare a reply. See the error above to retry or ask your mentor.',
+          }
           : {
-              tone: 'success',
-              text: active
-                ? 'Question sent. Your message and the resulting guidance or mentor handoff are in Conversation.'
-                : 'Clarification sent to your mentor and saved in Conversation.',
-            },
+            tone: 'success',
+            text: active
+              ? 'Question sent. Your message and the resulting guidance or mentor handoff are in Conversation.'
+              : 'Clarification sent to your mentor and saved in Conversation.',
+          },
       )
     } else {
       setRequestFeedback({
@@ -108,6 +112,10 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
       })
     }
     nearBottom.current = true
+  }
+  async function sendQuestion(event: FormEvent) {
+    event.preventDefault()
+    await deliverQuestion(question)
   }
   async function askMentor(event: FormEvent) {
     event.preventDefault()
@@ -128,18 +136,18 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
     setRequestFeedback(
       outcome === 'done'
         ? {
-            tone: 'success',
-            text: 'Retry succeeded. The saved question and resulting guidance or mentor handoff are in Conversation.',
-          }
+          tone: 'success',
+          text: 'Retry succeeded. The saved question and resulting guidance or mentor handoff are in Conversation.',
+        }
         : outcome === 'saved'
           ? {
-              tone: 'info',
-              text: 'The question is saved, but RampUp still could not prepare a reply. See the updated error above or ask your mentor.',
-            }
+            tone: 'info',
+            text: 'The question is saved, but RampUp still could not prepare a reply. See the updated error above or ask your mentor.',
+          }
           : {
-              tone: 'error',
-              text: 'Retry did not complete. See the error above for the request status and next step.',
-            },
+            tone: 'error',
+            text: 'Retry did not complete. See the error above for the request status and next step.',
+          },
     )
   }
 
@@ -157,23 +165,24 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
             <span>
               {session.task.repository.owner} / <strong>{session.task.repository.name}</strong>
             </span>
-            <code>{session.task.repository.commit_sha.slice(0, 7)}</code>
           </div>
         </div>
         <div className="heading-actions">
-          <button
-            className="button secondary"
-            onClick={() => setModal('mentor')}
-            disabled={
-              finished ||
-              session.state === 'COMPLETION_REVIEW' ||
-              Boolean(session.open_escalation) ||
-              mentor.busy
-            }
-          >
-            <Icon name="chat" />
-            {session.open_escalation ? 'Mentor requested' : 'Ask my mentor'}
-          </button>
+          {!scriptedTaskOne && (
+            <button
+              className="button secondary"
+              onClick={() => setModal('mentor')}
+              disabled={
+                finished ||
+                session.state === 'COMPLETION_REVIEW' ||
+                Boolean(session.open_escalation) ||
+                mentor.busy
+              }
+            >
+              <Icon name="chat" />
+              {session.open_escalation ? 'Mentor requested' : 'Ask my mentor'}
+            </button>
+          )}
           <button className="icon-button" aria-label="Refresh workspace" onClick={resource.refresh}>
             <Icon name="refresh" />
           </button>
@@ -213,7 +222,7 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
           <summary>
             <span>
               <strong>Task brief</strong>
-              <small>Problem, goal, code structure, milestones, and task policy</small>
+              <small>Problem, goal, milestones, and code structure</small>
             </span>
             <Icon name="down" />
           </summary>
@@ -241,7 +250,7 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
               ? 'Questions, RampUp replies, mentor guidance, and submitted attempts appear here in time order.'
               : view === 'attempts'
                 ? 'Explicit submissions with your explanation, code, test output, and coach assessment. RampUp does not run code or tests.'
-                : 'Repository excerpts cited in guidance or attached to a mentor review, pinned to the task snapshot.'}
+                : 'Repository excerpts referenced in guidance or mentor reviews.'}
           </p>
           {session.open_escalation && (
             <div className="handoff-banner">
@@ -281,7 +290,7 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
               <div>
                 <strong>Task completed</strong>
                 <p>
-                  Your mentor confirmed this task. Your conversation and sources are here whenever
+                  Your work meets the task criteria. Your conversation and sources are here whenever
                   you need them.
                 </p>
               </div>
@@ -301,10 +310,10 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
                 <Conversation messages={session.messages} attempts={session.attempts} />
               ) : (
                 <div className="conversation-start">
-                  <h2>Ask about the code</h2>
-                  <p>Ask a question or share your approach.</p>
-                  <div className="starter-questions">
-                    {['Where should I start?', 'Which file should I read first?'].map((prompt) => (
+                  <h2>{scriptedTaskOne ? 'Add an optional description' : 'Investigate the conflicting guidance'}</h2>
+                  <p>{scriptedTaskOne ? 'Ask about the field and its validation, then share your change.' : 'Ask where validation belongs to compare the sources and bring your mentor in.'}</p>
+                  {!scriptedTaskOne && <div className="starter-questions">
+                    {starterQuestions.map((prompt) => (
                       <button
                         key={prompt}
                         onClick={() => {
@@ -317,7 +326,7 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
                         {prompt}
                       </button>
                     ))}
-                  </div>
+                  </div>}
                 </div>
               ))}
             {view === 'attempts' &&
@@ -337,7 +346,7 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
               (sources.length ? (
                 <div className="source-history">
                   <h2>The code behind the guidance</h2>
-                  <p className="muted">Each excerpt is pinned to the commit shown below.</p>
+                  <p className="muted">Repository excerpts referenced in the conversation.</p>
                   {sources.map((source) => (
                     <CodeExcerpt
                       key={`${source.source_id}-${source.start_line}-${source.end_line}`}
@@ -357,13 +366,35 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
                 <Notice tone={requestFeedback.tone}>{requestFeedback.text}</Notice>
               )}
               {running && active && (
-                <div className="coach-progress" role="status">
-                  <Spinner label="Preparing guidance" />
-                  <span>Finding a useful next step…</span>
-                  <span className="muted">You can ask your mentor at any time.</span>
+                <div className="typing-indicator" role="status" aria-label="RampUp is typing">
+                  <span>RampUp</span>
+                  <span>is typing</span>
+                  <i aria-hidden="true"><b /><b /><b /></i>
                 </div>
               )}
-              <form className="composer" onSubmit={sendQuestion}>
+              {scriptedTaskOne ? (
+                <div className="scripted-step" aria-live="polite">
+                  {scriptedQuestionsAnswered < TASK_ONE_SCRIPT.length ? (
+                    <>
+                      <p>Question {scriptedQuestionsAnswered + 1} of {TASK_ONE_SCRIPT.length}</p>
+                      <button
+                        className="button secondary"
+                        disabled={messageBlocked}
+                        onClick={() => void deliverQuestion(TASK_ONE_SCRIPT[scriptedQuestionsAnswered].question)}
+                      >
+                        {TASK_ONE_SCRIPT[scriptedQuestionsAnswered].question}
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <p>Both questions are answered. Share your work to finish Task 1.</p>
+                      <button className="button primary" onClick={() => setModal('attempt')}>
+                        Continue to submission <Icon name="arrow" size={15} />
+                      </button>
+                    </>
+                  )}
+                </div>
+              ) : <form className="composer" onSubmit={sendQuestion}>
                 <label className="sr-only" htmlFor="question">
                   {active ? 'Your question' : 'Add a clarification'}
                 </label>
@@ -403,30 +434,31 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
                     <Icon name="arrow" />
                   </button>
                 </div>
-              </form>
+              </form>}
               <div className="workspace-bottom">
                 <button
                   className="text-button"
                   onClick={() => setModal('attempt')}
-                  disabled={!active || coachBlocked}
+                  disabled={!active || coachBlocked || (scriptedTaskOne && scriptedQuestionsAnswered < TASK_ONE_SCRIPT.length)}
                 >
                   <Icon name="code" size={16} />
-                  Share an attempt
+                  {scriptedTaskOne ? 'Share your work' : 'Share an attempt'}
                 </button>
-                <button
-                  className="text-button"
-                  onClick={() => setModal('completion')}
-                  disabled={
-                    !active || coachBlocked || completion.busy || Boolean(completion.pending)
-                  }
-                >
-                  Request completion review <Icon name="arrow" size={14} />
-                </button>
+                {!scriptedTaskOne && (
+                  <button
+                    className="text-button"
+                    onClick={() => setModal('completion')}
+                    disabled={
+                      !active || coachBlocked || completion.busy || Boolean(completion.pending)
+                    }
+                  >
+                    Request completion review <Icon name="arrow" size={14} />
+                  </button>
+                )}
               </div>
             </div>
           )}
         </section>
-        <TaskBrief task={session.task} session={session} />
       </div>
       {modal === 'mentor' && (
         <Dialog title="Ask your mentor" onClose={() => setModal(null)}>
@@ -484,13 +516,13 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
             setRequestFeedback(
               outcome === 'saved'
                 ? {
-                    tone: 'info',
-                    text: 'Your attempt was saved, but RampUp could not prepare feedback. See the error above to retry or ask your mentor.',
-                  }
+                  tone: 'info',
+                  text: 'Your attempt was saved, but RampUp could not prepare feedback. See the error above to retry or ask your mentor.',
+                }
                 : {
-                    tone: 'success',
-                    text: 'Attempt submitted. RampUp feedback or a mentor handoff will appear in Conversation.',
-                  },
+                  tone: 'success',
+                  text: 'Attempt submitted. RampUp feedback or a mentor handoff will appear in Conversation.',
+                },
             )
           }}
         />
@@ -565,6 +597,13 @@ function AttemptForm({
   const [code, setCode] = useDraft(`${scope}.code`)
   const [files, setFiles] = useDraft(`${scope}.files`)
   const [tests, setTests] = useDraft(`${scope}.tests`)
+  const scriptedTaskOne = session.task.id === 'demo-task-1'
+  function loadPreparedAttempt() {
+    setExplanation(TASK_ONE_SAMPLE_ATTEMPT.explanation)
+    setCode(TASK_ONE_SAMPLE_ATTEMPT.code)
+    setFiles(TASK_ONE_SAMPLE_ATTEMPT.file_paths.join('\n'))
+    setTests('')
+  }
   const paths = files
     .split(/[\n,]/)
     .map((path) => path.trim())
@@ -595,11 +634,19 @@ function AttemptForm({
     }
   }
   return (
-    <Dialog title="Share an attempt" onClose={close} wide>
+    <Dialog title={scriptedTaskOne ? 'Share your work' : 'Share an attempt'} onClose={close} wide>
       <p className="dialog-description">
         Show your thinking, even if it’s unfinished. Code and test output are reviewed as material
         you provide.
       </p>
+      {scriptedTaskOne && (
+        <div className="scripted-attempt-note">
+          <span>Example response</span>
+          <button className="text-button" type="button" onClick={loadPreparedAttempt}>
+            Use example response
+          </button>
+        </div>
+      )}
       <form onSubmit={submit}>
         <fieldset disabled={operation.busy || Boolean(operation.pending)}>
           <label htmlFor="attempt-explanation">What did you try?</label>
@@ -686,7 +733,8 @@ function AttemptForm({
               Boolean(operation.pending)
             }
           >
-            {operation.busy ? <Spinner /> : <Icon name="arrow" />}Submit attempt
+            {operation.busy ? <Spinner /> : <Icon name="arrow" />}
+            {scriptedTaskOne ? 'Check my work' : 'Submit attempt'}
           </button>
         </footer>
       </form>

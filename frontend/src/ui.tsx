@@ -296,16 +296,13 @@ export function CodeExcerpt({ source }: { source: Citation }) {
           </span>
         ))}
       </pre>
-      <footer>
-        <span>
-          Snapshot <code>{source.commit_sha.slice(0, 7)}</code>
-        </span>
-        {safeSourceUrl(source.url) && (
+      {safeSourceUrl(source.url) && (
+        <footer>
           <a href={safeSourceUrl(source.url)} target="_blank" rel="noopener noreferrer">
             View on GitHub <Icon name="external" size={13} />
           </a>
-        )}
-      </footer>
+        </footer>
+      )}
     </div>
   )
 }
@@ -313,7 +310,7 @@ export function SourceDrawer({ source, close }: { source: Citation; close: () =>
   return (
     <Dialog title="Repository evidence" onClose={close} drawer>
       <p className="muted drawer-intro">
-        The exact excerpt used in this guidance, pinned to a repository snapshot.
+        The repository excerpt referenced in this guidance.
       </p>
       <CodeExcerpt source={source} />
     </Dialog>
@@ -483,11 +480,6 @@ export function TaskBrief({ task, session }: { task: Task; session?: Session }) 
         : { heading: '', content: block.trim() }
     })
     .filter((block) => block.content)
-  const mode = {
-    HINTS: 'Progressive hints',
-    CONCEPTS: 'Concept explanations',
-    ATTEMPT_REVIEW: 'Attempt review',
-  }[task.assistance_mode]
   return (
     <aside className="task-brief">
       <section>
@@ -509,7 +501,7 @@ export function TaskBrief({ task, session }: { task: Task; session?: Session }) 
         </div>
       </section>
       <section>
-        <h3>Milestones</h3>
+        <h3>What success looks like</h3>
         {task.milestones.map((milestone, index) => (
           <div className="milestone" key={milestone.id}>
             <div className="milestone-heading">
@@ -533,30 +525,6 @@ export function TaskBrief({ task, session }: { task: Task; session?: Session }) 
           </div>
         ))}
       </section>
-      <section className="brief-policy">
-        <h3>Task policy</h3>
-        <p>
-          <Icon name="chat" size={15} />
-          {mode}
-        </p>
-        {task.protected_paths.length > 0 && (
-          <>
-            <span className="muted">Ask your mentor before changing</span>
-            {task.protected_paths.map((path) => (
-              <code className="protected-path" key={path}>
-                {path}
-              </code>
-            ))}
-          </>
-        )}
-      </section>
-      <div className="brief-footnote">
-        <Icon name="branch" size={15} />
-        <span>
-          Repository reads stay pinned to{' '}
-          <code>{task.repository.commit_sha.slice(0, 7) || 'a snapshot'}</code>.
-        </span>
-      </div>
       {session && (
         <button className="text-button activity-link" onClick={() => setActivityOpen(true)}>
           <Icon name="clock" size={15} />

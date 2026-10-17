@@ -1,3 +1,5 @@
+import { demoRequest } from './demo-api.ts'
+
 export class ApiError extends Error {
   status: number
   code: string
@@ -43,9 +45,9 @@ export function createClient({ token, expired, fetcher = fetch, timeout = 65000 
         if (response.status === 401 && path !== '/auth/login') expired()
         throw new ApiError(
           data?.error?.message ||
-            (response.status === 503
-              ? 'The service is temporarily unavailable. Please try again.'
-              : 'We couldn’t complete that request.'),
+          (response.status === 503
+            ? 'The service is temporarily unavailable. Please try again.'
+            : 'We couldn’t complete that request.'),
           response.status,
           data?.error?.code || 'REQUEST_FAILED',
           data?.error?.retryable ?? response.status >= 500,
@@ -71,10 +73,10 @@ export function createClient({ token, expired, fetcher = fetch, timeout = 65000 
   }
 }
 
-export const api = createClient({
-  token: () => sessionStorage.getItem('rampup.token'),
-  expired: () => window.dispatchEvent(new Event('rampup:expired')),
-})
+export const api = {
+  get: <T>(path: string) => demoRequest<T>('GET', path),
+  post: <T>(path: string, body: unknown, _key?: string) => demoRequest<T>('POST', path, body),
+}
 
 export interface Operation {
   path: string
