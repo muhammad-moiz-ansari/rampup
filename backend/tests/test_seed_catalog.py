@@ -1,5 +1,10 @@
 from scripts.seed_demo import TASK, TASK_CATALOG
-from app.coach import COACH_FAILURE_MESSAGES
+from app.coach import (
+    COACH_FAILURE_MESSAGES,
+    MODEL_HTTP_FAILURE_CATEGORIES,
+    model_http_failure_category,
+)
+import httpx
 
 
 def test_demo_task_catalog_has_distinct_levels_and_problem_context():
@@ -33,3 +38,24 @@ def test_model_failure_messages_name_actionable_causes():
     assert "rate-limiting" in COACH_FAILURE_MESSAGES["MODEL_RATE_LIMIT"]
     assert "timed out" in COACH_FAILURE_MESSAGES["MODEL_TIMEOUT"]
     assert "could not validate" in COACH_FAILURE_MESSAGES["MODEL_OUTPUT_INVALID"]
+    assert MODEL_HTTP_FAILURE_CATEGORIES[404] == "MODEL_CONFIGURATION"
+
+
+def test_invalid_google_api_key_is_classified_as_authentication_failure():
+    response = httpx.Response(
+        400,
+        json={
+            "error": {
+                "message": "API key not valid. Please pass a valid API key.",
+                "details": [
+                    {
+                        "reason": "API_KEY_INVALID",
+                    }
+                ],
+            }
+        },
+    )
+    error = httpx.HTTPStatusError(
+        "Bad request", request=httpx.Request("POST", "https://example.test"), response=response
+    )
+    assert model_http_failure_category(error) == "MODEL_AUTH"

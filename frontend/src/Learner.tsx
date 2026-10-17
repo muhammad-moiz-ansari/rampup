@@ -33,7 +33,7 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
   const completion = useOperation(`${user.id}.${id}.completion`, changed, resource.refresh)
   const [question, setQuestion] = useDraft(`${user.id}.${id}.question`)
   const [mentorQuestion, setMentorQuestion] = useDraft(`${user.id}.${id}.mentor-question`)
-  const [modal, setModal] = useState<'attempt' | 'mentor' | 'completion' | 'brief' | null>(null)
+  const [modal, setModal] = useState<'attempt' | 'mentor' | 'completion' | null>(null)
   const [view, setView] = useState<'conversation' | 'attempts' | 'sources'>('conversation')
   const [requestFeedback, setRequestFeedback] = useState<{
     tone: 'info' | 'success' | 'error'
@@ -174,13 +174,6 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
             <Icon name="chat" />
             {session.open_escalation ? 'Mentor requested' : 'Ask my mentor'}
           </button>
-          <button
-            className="icon-button task-details-mobile"
-            aria-label="View task details"
-            onClick={() => setModal('brief')}
-          >
-            <Icon name="task" />
-          </button>
           <button className="icon-button" aria-label="Refresh workspace" onClick={resource.refresh}>
             <Icon name="refresh" />
           </button>
@@ -216,6 +209,16 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
         }}
       />
       <div className="learner-grid">
+        <details className="task-description-disclosure learner-task-disclosure" open>
+          <summary>
+            <span>
+              <strong>Task brief</strong>
+              <small>Problem, goal, code structure, milestones, and task policy</small>
+            </span>
+            <Icon name="down" />
+          </summary>
+          <TaskBrief task={session.task} session={session} />
+        </details>
         <section className="learning-panel" aria-label="Learning workspace">
           <div className="panel-tabs" aria-label="Workspace views">
             {(['conversation', 'attempts', 'sources'] as const).map((item) => (
@@ -475,16 +478,22 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
           session={session}
           operation={coach}
           close={() => setModal(null)}
-          onSubmitted={() => {
-            setView('attempts')
+          onSubmitted={(outcome) => {
+            setView('conversation')
             setModal(null)
+            setRequestFeedback(
+              outcome === 'saved'
+                ? {
+                    tone: 'info',
+                    text: 'Your attempt was saved, but RampUp could not prepare feedback. See the error above to retry or ask your mentor.',
+                  }
+                : {
+                    tone: 'success',
+                    text: 'Attempt submitted. RampUp feedback or a mentor handoff will appear in Conversation.',
+                  },
+            )
           }}
         />
-      )}
-      {modal === 'brief' && (
-        <Dialog title="Task details" onClose={() => setModal(null)}>
-          <TaskBrief task={session.task} session={session} />
-        </Dialog>
       )}
       {modal === 'completion' && (
         <Dialog title="Ready for a review?" onClose={() => setModal(null)}>
@@ -549,7 +558,7 @@ function AttemptForm({
   user: User
   operation: ReturnType<typeof useOperation>
   close: () => void
-  onSubmitted: () => void
+  onSubmitted: (outcome: 'done' | 'saved') => void
 }) {
   const scope = `${user.id}.${session.id}.attempt`
   const [explanation, setExplanation] = useDraft(`${scope}.explanation`)
@@ -582,7 +591,7 @@ function AttemptForm({
       setCode('')
       setFiles('')
       setTests('')
-      onSubmitted()
+      onSubmitted(outcome)
     }
   }
   return (

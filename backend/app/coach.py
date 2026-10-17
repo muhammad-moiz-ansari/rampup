@@ -43,6 +43,35 @@ COACH_FAILURE_MESSAGES = {
     "MODEL_UPSTREAM": "The AI provider returned an upstream error. Retry the saved request or ask your mentor.",
     "COACH_FAILURE": "AI coaching failed unexpectedly. Retry the saved request or ask your mentor.",
 }
+MODEL_HTTP_FAILURE_CATEGORIES = {
+    400: "MODEL_CONFIGURATION",
+    401: "MODEL_AUTH",
+    403: "MODEL_AUTH",
+    404: "MODEL_CONFIGURATION",
+    429: "MODEL_RATE_LIMIT",
+}
+
+
+def model_http_failure_category(error):
+    if error.response.status_code == 400:
+        try:
+            payload = error.response.json()
+        except ValueError:
+            payload = {}
+        details = payload.get("error", {}).get("details", [])
+        reasons = {
+            detail.get("reason")
+            for detail in details
+            if isinstance(detail, dict)
+        }
+        provider_message = payload.get("error", {}).get("message", "").lower()
+        if reasons.intersection({"API_KEY_INVALID", "API_KEY_SERVICE_BLOCKED"}) or (
+            "api key not valid" in provider_message
+        ):
+            return "MODEL_AUTH"
+    return MODEL_HTTP_FAILURE_CATEGORIES.get(
+        error.response.status_code, "MODEL_UPSTREAM"
+    )
 
 
 class SnapshotTools:
@@ -567,12 +596,7 @@ def submit_input(db, user, session_id, body, key, kind, model):
         if isinstance(error, (httpx.TimeoutException, TimeoutError)):
             category = "MODEL_TIMEOUT"
         elif isinstance(error, httpx.HTTPStatusError):
-            category = {
-                401: "MODEL_AUTH",
-                403: "MODEL_AUTH",
-                429: "MODEL_RATE_LIMIT",
-                400: "MODEL_CONFIGURATION",
-            }.get(error.response.status_code, "MODEL_UPSTREAM")
+            category = model_http_failure_category(error)
         elif isinstance(error, RuntimeError) and str(error) == "MODEL_NOT_CONFIGURED":
             category = "MODEL_NOT_CONFIGURED"
         elif isinstance(error, ValueError):
