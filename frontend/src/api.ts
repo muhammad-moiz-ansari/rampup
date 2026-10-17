@@ -45,9 +45,9 @@ export function createClient({ token, expired, fetcher = fetch, timeout = 65000 
         if (response.status === 401 && path !== '/auth/login') expired()
         throw new ApiError(
           data?.error?.message ||
-          (response.status === 503
-            ? 'The service is temporarily unavailable. Please try again.'
-            : 'We couldn’t complete that request.'),
+            (response.status === 503
+              ? 'The service is temporarily unavailable. Please try again.'
+              : 'We couldn’t complete that request.'),
           response.status,
           data?.error?.code || 'REQUEST_FAILED',
           data?.error?.retryable ?? response.status >= 500,

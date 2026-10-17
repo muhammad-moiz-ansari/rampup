@@ -209,16 +209,22 @@ function Login({ onLogin, expired }: { onLogin: (result: LoginResult) => void; e
           </div>
           <h2>Choose a demo role</h2>
           <p className="login-description">Choose a role to enter the learning workspace.</p>
-          {expired && (
-            <Notice tone="info">Choose a role to continue the saved demo.</Notice>
-          )}
+          {expired && <Notice tone="info">Choose a role to continue the saved demo.</Notice>}
           <div className="demo-role-actions">
-            <button className="button primary full-width" disabled={busy} onClick={() => void startDemo('LEARNER')}>
+            <button
+              className="button primary full-width"
+              disabled={busy}
+              onClick={() => void startDemo('LEARNER')}
+            >
               {busy ? <Spinner label="Opening learner demo" /> : <Icon name="task" />}
               Enter as learner
               {!busy && <Icon name="arrow" />}
             </button>
-            <button className="button secondary full-width" disabled={busy} onClick={() => void startDemo('MENTOR')}>
+            <button
+              className="button secondary full-width"
+              disabled={busy}
+              onClick={() => void startDemo('MENTOR')}
+            >
               {busy ? <Spinner label="Opening mentor demo" /> : <Icon name="inbox" />}
               Enter as mentor
               {!busy && <Icon name="arrow" />}
@@ -245,33 +251,33 @@ function Shell({
   const mentor = user.role === 'MENTOR'
   const links = mentor
     ? [
-      {
-        href: '/reviews',
-        label: 'Review queue',
-        icon: 'inbox' as const,
-        active: path.startsWith('/review'),
-      },
-      {
-        href: '/completions',
-        label: 'Completion reviews',
-        icon: 'check' as const,
-        active: path.startsWith('/completion'),
-      },
-      {
-        href: '/tasks',
-        label: 'Assigned tasks',
-        icon: 'task' as const,
-        active: path.startsWith('/task'),
-      },
-    ]
+        {
+          href: '/reviews',
+          label: 'Review queue',
+          icon: 'inbox' as const,
+          active: path.startsWith('/review'),
+        },
+        {
+          href: '/completions',
+          label: 'Completion reviews',
+          icon: 'check' as const,
+          active: path.startsWith('/completion'),
+        },
+        {
+          href: '/tasks',
+          label: 'Assigned tasks',
+          icon: 'task' as const,
+          active: path.startsWith('/task'),
+        },
+      ]
     : [
-      {
-        href: '/tasks',
-        label: 'My tasks',
-        icon: 'task' as const,
-        active: path.startsWith('/task') || path.startsWith('/session'),
-      },
-    ]
+        {
+          href: '/tasks',
+          label: 'My tasks',
+          icon: 'task' as const,
+          active: path.startsWith('/task') || path.startsWith('/session'),
+        },
+      ]
   function navigation() {
     return (
       <>

@@ -81,8 +81,7 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
           item.end_line === source.end_line,
       ) === index,
   )
-  const starterQuestions =
-    scriptedTaskOne ? [] : ['Where should quantity validation live?']
+  const starterQuestions = scriptedTaskOne ? [] : ['Where should quantity validation live?']
   async function deliverQuestion(content: string) {
     if (!content.trim() || messageBlocked || finished) return
     setRequestFeedback({ tone: 'info', text: 'Sending your question to RampUp…' })
@@ -97,15 +96,15 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
       setRequestFeedback(
         outcome === 'saved'
           ? {
-            tone: 'info',
-            text: 'Your question was saved, but RampUp could not prepare a reply. See the error above to retry or ask your mentor.',
-          }
+              tone: 'info',
+              text: 'Your question was saved, but RampUp could not prepare a reply. See the error above to retry or ask your mentor.',
+            }
           : {
-            tone: 'success',
-            text: active
-              ? 'Question sent. Your message and the resulting guidance or mentor handoff are in Conversation.'
-              : 'Clarification sent to your mentor and saved in Conversation.',
-          },
+              tone: 'success',
+              text: active
+                ? 'Question sent. Your message and the resulting guidance or mentor handoff are in Conversation.'
+                : 'Clarification sent to your mentor and saved in Conversation.',
+            },
       )
     } else {
       setRequestFeedback({
@@ -138,18 +137,18 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
     setRequestFeedback(
       outcome === 'done'
         ? {
-          tone: 'success',
-          text: 'Retry succeeded. The saved question and resulting guidance or mentor handoff are in Conversation.',
-        }
+            tone: 'success',
+            text: 'Retry succeeded. The saved question and resulting guidance or mentor handoff are in Conversation.',
+          }
         : outcome === 'saved'
           ? {
-            tone: 'info',
-            text: 'The question is saved, but RampUp still could not prepare a reply. See the updated error above or ask your mentor.',
-          }
+              tone: 'info',
+              text: 'The question is saved, but RampUp still could not prepare a reply. See the updated error above or ask your mentor.',
+            }
           : {
-            tone: 'error',
-            text: 'Retry did not complete. See the error above for the request status and next step.',
-          },
+              tone: 'error',
+              text: 'Retry did not complete. See the error above for the request status and next step.',
+            },
     )
   }
 
@@ -333,7 +332,7 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
                         {prompt}
                       </button>
                     ))}
-                  </div>}
+                  </div>
                 </div>
               ))}
             {view === 'attempts' && session.task.exercise && (
@@ -395,7 +394,11 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
                 <div className="typing-indicator" role="status" aria-label="RampUp is typing">
                   <span>RampUp</span>
                   <span>is typing</span>
-                  <i aria-hidden="true"><b /><b /><b /></i>
+                  <i aria-hidden="true">
+                    <b />
+                    <b />
+                    <b />
+                  </i>
                 </div>
               )}
               {active &&
@@ -559,13 +562,13 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
             setRequestFeedback(
               outcome === 'saved'
                 ? {
-                  tone: 'info',
-                  text: 'Your attempt was saved, but RampUp could not prepare feedback. See the error above to retry or ask your mentor.',
-                }
+                    tone: 'info',
+                    text: 'Your attempt was saved, but RampUp could not prepare feedback. See the error above to retry or ask your mentor.',
+                  }
                 : {
-                  tone: 'success',
-                  text: 'Attempt submitted. RampUp feedback or a mentor handoff will appear in Conversation.',
-                },
+                    tone: 'success',
+                    text: 'Attempt submitted. RampUp feedback or a mentor handoff will appear in Conversation.',
+                  },
             )
           }}
         />

@@ -309,9 +309,7 @@ export function CodeExcerpt({ source }: { source: Citation }) {
 export function SourceDrawer({ source, close }: { source: Citation; close: () => void }) {
   return (
     <Dialog title="Repository evidence" onClose={close} drawer>
-      <p className="muted drawer-intro">
-        The repository excerpt referenced in this guidance.
-      </p>
+      <p className="muted drawer-intro">The repository excerpt referenced in this guidance.</p>
       <CodeExcerpt source={source} />
     </Dialog>
   )
