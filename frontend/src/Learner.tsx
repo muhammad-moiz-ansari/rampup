@@ -35,6 +35,10 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
   const [mentorQuestion, setMentorQuestion] = useDraft(`${user.id}.${id}.mentor-question`)
   const [modal, setModal] = useState<'attempt' | 'mentor' | 'completion' | 'brief' | null>(null)
   const [view, setView] = useState<'conversation' | 'attempts' | 'sources'>('conversation')
+  const [requestFeedback, setRequestFeedback] = useState<{
+    tone: 'info' | 'success' | 'error'
+    text: string
+  } | null>(null)
   const chat = useRef<HTMLDivElement>(null)
   const nearBottom = useRef(true)
   const input = useRef<HTMLTextAreaElement>(null)
@@ -75,12 +79,34 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
   async function sendQuestion(event: FormEvent) {
     event.preventDefault()
     if (!question.trim() || messageBlocked || finished) return
+    setRequestFeedback({ tone: 'info', text: 'Sending your question to RampUp…' })
+    setView('conversation')
     const outcome = await messageOperation.run(
       `/sessions/${id}/messages`,
       { content: question.trim() },
       active ? 'question' : 'clarification',
     )
-    if (outcome !== 'failed') setQuestion('')
+    if (outcome !== 'failed') {
+      setQuestion('')
+      setRequestFeedback(
+        outcome === 'saved'
+          ? {
+              tone: 'info',
+              text: 'Your question was saved, but RampUp could not prepare a reply. See the error above to retry or ask your mentor.',
+            }
+          : {
+              tone: 'success',
+              text: active
+                ? 'Question sent. Your message and the resulting guidance or mentor handoff are in Conversation.'
+                : 'Clarification sent to your mentor and saved in Conversation.',
+            },
+      )
+    } else {
+      setRequestFeedback({
+        tone: 'error',
+        text: 'Delivery could not be confirmed. Your draft is still here; use Retry original request if shown.',
+      })
+    }
     nearBottom.current = true
   }
   async function askMentor(event: FormEvent) {
@@ -94,6 +120,27 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
       setModal(null)
       setMentorQuestion('')
     }
+  }
+  async function retryQuestion(operation: ReturnType<typeof useOperation>) {
+    const outcome = await operation.retry()
+    setView('conversation')
+    if (outcome !== 'failed') setQuestion('')
+    setRequestFeedback(
+      outcome === 'done'
+        ? {
+            tone: 'success',
+            text: 'Retry succeeded. The saved question and resulting guidance or mentor handoff are in Conversation.',
+          }
+        : outcome === 'saved'
+          ? {
+              tone: 'info',
+              text: 'The question is saved, but RampUp still could not prepare a reply. See the updated error above or ask your mentor.',
+            }
+          : {
+              tone: 'error',
+              text: 'Retry did not complete. See the error above for the request status and next step.',
+            },
+    )
   }
 
   return (
@@ -159,17 +206,13 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
       <OperationNotice
         operation={coach}
         onRetry={() => {
-          void coach.retry().then((outcome) => {
-            if (outcome !== 'failed') setQuestion('')
-          })
+          void retryQuestion(coach)
         }}
       />
       <OperationNotice
         operation={clarification}
         onRetry={() => {
-          void clarification.retry().then((outcome) => {
-            if (outcome !== 'failed') setQuestion('')
-          })
+          void retryQuestion(clarification)
         }}
       />
       <div className="learner-grid">
@@ -190,6 +233,13 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
               </button>
             ))}
           </div>
+          <p className="workspace-view-description" aria-live="polite">
+            {view === 'conversation'
+              ? 'Questions, RampUp replies, mentor guidance, and submitted attempts appear here in time order.'
+              : view === 'attempts'
+                ? 'Explicit submissions with your explanation, code, test output, and coach assessment. RampUp does not run code or tests.'
+                : 'Repository excerpts cited in guidance or attached to a mentor review, pinned to the task snapshot.'}
+          </p>
           {session.open_escalation && (
             <div className="handoff-banner">
               <span className="handoff-symbol">
@@ -300,6 +350,9 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
           </div>
           {!finished && (
             <div className="composer-area">
+              {requestFeedback && (
+                <Notice tone={requestFeedback.tone}>{requestFeedback.text}</Notice>
+              )}
               {running && active && (
                 <div className="coach-progress" role="status">
                   <Spinner label="Preparing guidance" />
@@ -315,7 +368,10 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
                   id="question"
                   ref={input}
                   value={question}
-                  onChange={(event) => setQuestion(event.target.value)}
+                  onChange={(event) => {
+                    setQuestion(event.target.value)
+                    setRequestFeedback(null)
+                  }}
                   placeholder={
                     active ? 'What would you like to work through?' : 'Add a note for your mentor…'
                   }
@@ -414,7 +470,16 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
         </Dialog>
       )}
       {modal === 'attempt' && (
-        <AttemptForm user={user} session={session} operation={coach} close={() => setModal(null)} />
+        <AttemptForm
+          user={user}
+          session={session}
+          operation={coach}
+          close={() => setModal(null)}
+          onSubmitted={() => {
+            setView('attempts')
+            setModal(null)
+          }}
+        />
       )}
       {modal === 'brief' && (
         <Dialog title="Task details" onClose={() => setModal(null)}>
@@ -478,11 +543,13 @@ function AttemptForm({
   user,
   operation,
   close,
+  onSubmitted,
 }: {
   session: Session
   user: User
   operation: ReturnType<typeof useOperation>
   close: () => void
+  onSubmitted: () => void
 }) {
   const scope = `${user.id}.${session.id}.attempt`
   const [explanation, setExplanation] = useDraft(`${scope}.explanation`)
@@ -515,7 +582,7 @@ function AttemptForm({
       setCode('')
       setFiles('')
       setTests('')
-      close()
+      onSubmitted()
     }
   }
   return (

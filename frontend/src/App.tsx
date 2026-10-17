@@ -561,7 +561,16 @@ function TaskDetails({ id, user }: { id: string; user: User }) {
       </header>
       {error && <Notice>{error}</Notice>}
       <div className="task-details-layout">
-        <TaskBrief task={task} />
+        <details className="task-description-disclosure" open>
+          <summary>
+            <span>
+              <strong>Task brief</strong>
+              <small>Problem, goal, code structure, and acceptance criteria</small>
+            </span>
+            <Icon name="down" />
+          </summary>
+          <TaskBrief task={task} />
+        </details>
         <aside className="task-start-panel">
           <Icon name="task" size={27} />
           <h2>{user.role === 'LEARNER' ? 'Start task' : 'Task details'}</h2>

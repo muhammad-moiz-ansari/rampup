@@ -33,6 +33,17 @@ from app.workflow import (
     attempts,
 )
 
+COACH_FAILURE_MESSAGES = {
+    "MODEL_NOT_CONFIGURED": "AI coaching is not configured on the server. Check the server-side model and API key settings.",
+    "MODEL_AUTH": "The AI provider rejected its server-side credentials. Check the API key and provider permissions.",
+    "MODEL_RATE_LIMIT": "The AI provider is rate-limiting requests. Wait briefly, then retry.",
+    "MODEL_CONFIGURATION": "The AI provider rejected the configured model or request settings. Check the server-side model configuration.",
+    "MODEL_TIMEOUT": "The AI provider did not respond before the request timed out. Retry the saved request.",
+    "MODEL_OUTPUT_INVALID": "The AI provider returned a response RampUp could not validate. Retry or ask your mentor.",
+    "MODEL_UPSTREAM": "The AI provider returned an upstream error. Retry the saved request or ask your mentor.",
+    "COACH_FAILURE": "AI coaching failed unexpectedly. Retry the saved request or ask your mentor.",
+}
+
 
 class SnapshotTools:
     def __init__(self, engine, project_id, session_id, commit_sha=None):
@@ -577,13 +588,13 @@ def submit_input(db, user, session_id, body, key, kind, model):
                 session_id=session.id,
                 tool="coach",
                 status="FAILED",
-                summary="Coach failed or returned unsupported output. Input is saved; retry with the same key or request a mentor.",
+                summary=f"{COACH_FAILURE_MESSAGES[category]} Learner input is saved.",
             )
         )
         db.commit()
         raise AppError(
             503,
             "COACH_FAILED",
-            "Your input was saved. Retry with the same key or request a mentor.",
+            f"Your input was saved, but {COACH_FAILURE_MESSAGES[category]} Retry the original request with the same key or ask your mentor.",
             True,
         ) from None

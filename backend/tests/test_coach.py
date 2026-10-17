@@ -56,6 +56,8 @@ def test_timeout_saves_attempt_same_key_retry_no_duplicate(system):
     response = attempt(s, key)
     assert response.status_code == 503, response.text
     assert response.json()["error"]["retryable"] is True
+    assert "input was saved" in response.json()["error"]["message"]
+    assert "timed out" in response.json()["error"]["message"]
     with s["factory"]() as db:
         assert db.scalar(select(func.count()).select_from(Attempt)) == 1
         assert db.scalar(select(AgentRun.status)) == "FAILED"

@@ -494,9 +494,16 @@ export function TaskBrief({ task, session }: { task: Task; session?: Session }) 
         <h2>The task</h2>
         <div className="task-description-blocks">
           {descriptionBlocks.map((block, index) => (
-            <div className="task-description-block" key={`${block.heading}-${index}`}>
+            <div
+              className={`task-description-block ${block.heading.toLowerCase() === 'code structure' ? 'is-code-structure' : ''}`}
+              key={`${block.heading}-${index}`}
+            >
               {block.heading && <h4>{block.heading}</h4>}
-              <p>{block.content}</p>
+              {block.heading.toLowerCase() === 'code structure' ? (
+                <pre className="code-structure-tree">{block.content}</pre>
+              ) : (
+                <p>{block.content}</p>
+              )}
             </div>
           ))}
         </div>

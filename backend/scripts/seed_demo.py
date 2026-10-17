@@ -20,7 +20,7 @@ TASK_CATALOG = [
             "Problem: The item-creation endpoint accepts a name and price, but the inventory team also needs an optional description. The request must reject descriptions longer than 500 characters.\n\n"
             "Difficulty: Entry level\n\n"
             "Goal: Extend the request model and creation response to support an optional description while preserving the existing name and non-negative price rules. Do not change authentication.\n\n"
-            "Code structure: demo-repo/schemas.py defines Pydantic request models. demo-repo/routes.py imports a schema and maps request fields into the response. Keep validation in the schema and make the route behavior match it."
+            "Code structure:\ndemo-repo/\n|-- schemas.py  Pydantic request models and field validation\n|-- routes.py   HTTP endpoint and response mapping\n\\-- auth.py     Protected authentication boundary"
         ),
         "assistance_mode": "CONCEPTS",
         "milestone": {
@@ -40,7 +40,7 @@ TASK_CATALOG = [
             "Problem: The inventory API has a create route but no way to update an item's stock quantity. The onboarding README recommends route-level conditionals, while the current code validates request data with Pydantic schemas.\n\n"
             "Difficulty: Intermediate\n\n"
             "Goal: Design a quantity-update endpoint with a non-negative integer quantity. Explain how invalid input and an unknown item should be handled, and keep the protected authentication module unchanged.\n\n"
-            "Code structure: demo-repo/schemas.py owns request validation; demo-repo/routes.py defines HTTP endpoints; demo-repo/service.py contains item lookup; demo-repo/errors.py defines the not-found domain error. demo-repo/architecture.md describes the route, schema, and service boundaries."
+            "Code structure:\ndemo-repo/\n|-- schemas.py      Request validation\n|-- routes.py       HTTP endpoints\n|-- service.py      Item lookup\n|-- errors.py       Domain errors\n|-- architecture.md Layer boundaries\n\\-- auth.py         Protected authentication boundary"
         ),
         "assistance_mode": "HINTS",
         "milestone": {
@@ -65,7 +65,7 @@ TASK_CATALOG = [
             "Problem: The service lookup raises ItemNotFound when an item ID is absent. A route that uses this service needs a clear HTTP behavior without leaking internal details.\n\n"
             "Difficulty: Advanced\n\n"
             "Goal: Trace the existing domain error and propose a consistent response for an unknown item. Keep the service responsible for lookup, the route responsible for HTTP adaptation, and authentication untouched.\n\n"
-            "Code structure: demo-repo/service.py searches items and raises ItemNotFound from demo-repo/errors.py. demo-repo/routes.py owns HTTP endpoints, and demo-repo/architecture.md documents the boundary between routes and services."
+            "Code structure:\ndemo-repo/\n|-- routes.py       HTTP error mapping\n|-- service.py      Item lookup and domain behavior\n|-- errors.py       ItemNotFound definition\n|-- architecture.md Route/service responsibilities\n\\-- auth.py         Protected authentication boundary"
         ),
         "assistance_mode": "ATTEMPT_REVIEW",
         "milestone": {
@@ -158,9 +158,10 @@ def seed(
                     milestones=[data["milestone"]],
                 )
             )
-        elif data["id"] == TASK:
+        else:
             task.title = data["title"]
             task.description = data["description"]
+            task.policy = policy
             task.milestones = [data["milestone"]]
     db.commit()
 
