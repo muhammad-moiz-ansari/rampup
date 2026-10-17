@@ -79,10 +79,15 @@ def me(user: Actor):
 @router.get("/tasks", response_model=TaskList)
 def tasks(db: DB, user: Actor):
     field = Task.mentor_id if user.role == "MENTOR" else Task.learner_id
+    assigned = list(
+        db.scalars(
+            select(Task).where(field == user.id).order_by(Task.created_at, Task.id)
+        )
+    )
+    current = [task for task in assigned if task.policy.get("walkthrough_id")]
     return {
         "items": [
-            task_view(db, task_access(db, t.id, user))
-            for t in db.scalars(select(Task).where(field == user.id))
+            task_view(db, task_access(db, t.id, user)) for t in (current or assigned)
         ]
     }
 

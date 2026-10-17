@@ -48,6 +48,8 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
     if (nearBottom.current && view === 'conversation') {
       const box = chat.current
       if (box) box.scrollTo({ top: box.scrollHeight, behavior: 'auto' })
+    } else if (view !== 'conversation') {
+      chat.current?.scrollTo({ top: 0, behavior: 'auto' })
     }
   }, [entryCount, view])
   if (!session)
@@ -209,7 +211,7 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
         }}
       />
       <div className="learner-grid">
-        <details className="task-description-disclosure learner-task-disclosure" open>
+        <details className="task-description-disclosure learner-task-disclosure">
           <summary>
             <span>
               <strong>Task brief</strong>
@@ -236,13 +238,15 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
               </button>
             ))}
           </div>
-          <p className="workspace-view-description" aria-live="polite">
-            {view === 'conversation'
-              ? 'Questions, RampUp replies, mentor guidance, and submitted attempts appear here in time order.'
-              : view === 'attempts'
-                ? 'Explicit submissions with your explanation, code, test output, and coach assessment. RampUp does not run code or tests.'
-                : 'Repository excerpts cited in guidance or attached to a mentor review, pinned to the task snapshot.'}
-          </p>
+          {(!session.task.exercise || view === 'sources') && (
+            <p className="workspace-view-description" aria-live="polite">
+              {view === 'conversation'
+                ? 'Questions, RampUp replies, mentor guidance, and submitted attempts appear here in time order.'
+                : view === 'attempts'
+                  ? 'Explicit submissions with your explanation, code, test output, and coach assessment. RampUp does not run code or tests.'
+                  : 'Repository excerpts cited in guidance or attached to a mentor review, pinned to the task snapshot.'}
+            </p>
+          )}
           {session.open_escalation && (
             <div className="handoff-banner">
               <span className="handoff-symbol">
@@ -304,7 +308,10 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
                   <h2>Ask about the code</h2>
                   <p>Ask a question or share your approach.</p>
                   <div className="starter-questions">
-                    {['Where should I start?', 'Which file should I read first?'].map((prompt) => (
+                    {(session.task.suggested_questions?.length
+                      ? session.task.suggested_questions
+                      : ['Where should I start?', 'Which file should I read first?']
+                    ).map((prompt) => (
                       <button
                         key={prompt}
                         onClick={() => {
@@ -320,6 +327,23 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
                   </div>
                 </div>
               ))}
+            {view === 'attempts' && session.task.exercise && (
+              <section className="exercise-brief">
+                <h2>{session.task.exercise.answer_label}</h2>
+                <p>{session.task.exercise.prompt}</p>
+                <pre tabIndex={0}>
+                  <code>{session.task.exercise.starter}</code>
+                </pre>
+                <button
+                  className="button primary"
+                  disabled={!active || coachBlocked || finished}
+                  onClick={() => setModal('attempt')}
+                >
+                  <Icon name="code" />
+                  Write answer
+                </button>
+              </section>
+            )}
             {view === 'attempts' &&
               (session.attempts.length ? (
                 <div className="attempt-history">
@@ -328,10 +352,12 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
                   ))}
                 </div>
               ) : (
-                <Empty title="No attempts yet" icon="code">
-                  Share an approach or a small change when you’re ready. It can be a work in
-                  progress.
-                </Empty>
+                !session.task.exercise && (
+                  <Empty title="No attempts yet" icon="code">
+                    Share an approach or a small change when you’re ready. It can be a work in
+                    progress.
+                  </Empty>
+                )
               ))}
             {view === 'sources' &&
               (sources.length ? (
@@ -363,56 +389,97 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
                   <span className="muted">You can ask your mentor at any time.</span>
                 </div>
               )}
-              <form className="composer" onSubmit={sendQuestion}>
-                <label className="sr-only" htmlFor="question">
-                  {active ? 'Your question' : 'Add a clarification'}
-                </label>
-                <textarea
-                  id="question"
-                  ref={input}
-                  value={question}
-                  onChange={(event) => {
-                    setQuestion(event.target.value)
-                    setRequestFeedback(null)
-                  }}
-                  placeholder={
-                    active ? 'What would you like to work through?' : 'Add a note for your mentor…'
-                  }
-                  required
-                  maxLength={8000}
-                  rows={3}
-                  disabled={messageBlocked}
-                  onKeyDown={(event) => {
-                    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
-                      event.preventDefault()
-                      event.currentTarget.form?.requestSubmit()
+              {active &&
+                entryCount > 0 &&
+                (session.task.suggested_questions || []).filter(
+                  (prompt) =>
+                    !session.messages.some(
+                      (message) =>
+                        message.author === 'LEARNER' && message.content.trim() === prompt,
+                    ),
+                ).length > 0 && (
+                  <div className="next-questions">
+                    {(session.task.suggested_questions || [])
+                      .filter(
+                        (prompt) =>
+                          !session.messages.some(
+                            (message) =>
+                              message.author === 'LEARNER' && message.content.trim() === prompt,
+                          ),
+                      )
+                      .map((prompt) => (
+                        <button
+                          className="text-button"
+                          key={prompt}
+                          onClick={() => {
+                            setQuestion(prompt)
+                            setView('conversation')
+                            input.current?.focus()
+                          }}
+                          disabled={coachBlocked}
+                        >
+                          <Icon name="plus" size={14} />
+                          {prompt}
+                        </button>
+                      ))}
+                  </div>
+                )}
+              {!(session.task.exercise && view === 'attempts') && (
+                <form className="composer" onSubmit={sendQuestion}>
+                  <label className="sr-only" htmlFor="question">
+                    {active ? 'Your question' : 'Add a clarification'}
+                  </label>
+                  <textarea
+                    id="question"
+                    ref={input}
+                    value={question}
+                    onChange={(event) => {
+                      setQuestion(event.target.value)
+                      setRequestFeedback(null)
+                    }}
+                    placeholder={
+                      active
+                        ? 'What would you like to work through?'
+                        : 'Add a note for your mentor…'
                     }
-                  }}
-                />
-                <div className="composer-footer">
-                  <span>
-                    {active ? '' : 'This note goes to your mentor.'}{' '}
-                    <span className="keyboard-hint">Ctrl + Enter to send</span>
-                  </span>
-                  <button
-                    className="send-button"
-                    type="submit"
-                    disabled={!question.trim() || messageBlocked}
-                    aria-label={active ? 'Send question' : 'Send clarification'}
-                  >
-                    <Icon name="arrow" />
-                  </button>
-                </div>
-              </form>
+                    required
+                    maxLength={8000}
+                    rows={3}
+                    disabled={messageBlocked}
+                    onKeyDown={(event) => {
+                      if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+                        event.preventDefault()
+                        event.currentTarget.form?.requestSubmit()
+                      }
+                    }}
+                  />
+                  <div className="composer-footer">
+                    <span>
+                      {active ? '' : 'This note goes to your mentor.'}{' '}
+                      <span className="keyboard-hint">Ctrl + Enter to send</span>
+                    </span>
+                    <button
+                      className="send-button"
+                      type="submit"
+                      disabled={!question.trim() || messageBlocked}
+                      aria-label={active ? 'Send question' : 'Send clarification'}
+                    >
+                      <Icon name="arrow" />
+                    </button>
+                  </div>
+                </form>
+              )}
               <div className="workspace-bottom">
-                <button
-                  className="text-button"
-                  onClick={() => setModal('attempt')}
-                  disabled={!active || coachBlocked}
-                >
-                  <Icon name="code" size={16} />
-                  Share an attempt
-                </button>
+                {!(session.task.exercise && view === 'attempts') && (
+                  <button
+                    className="text-button"
+                    onClick={() => setModal('attempt')}
+                    disabled={!active || coachBlocked}
+                  >
+                    <Icon name="code" size={16} />
+                    {session.task.exercise ? 'Write answer' : 'Share an attempt'}
+                  </button>
+                )}
                 <button
                   className="text-button"
                   onClick={() => setModal('completion')}
@@ -426,7 +493,6 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
             </div>
           )}
         </section>
-        <TaskBrief task={session.task} session={session} />
       </div>
       {modal === 'mentor' && (
         <Dialog title="Ask your mentor" onClose={() => setModal(null)}>
@@ -561,6 +627,7 @@ function AttemptForm({
   onSubmitted: (outcome: 'done' | 'saved') => void
 }) {
   const scope = `${user.id}.${session.id}.attempt`
+  const exercise = session.task.exercise
   const [explanation, setExplanation] = useDraft(`${scope}.explanation`)
   const [code, setCode] = useDraft(`${scope}.code`)
   const [files, setFiles] = useDraft(`${scope}.files`)
@@ -579,9 +646,9 @@ function AttemptForm({
       `/sessions/${session.id}/attempts`,
       {
         milestone_id: session.current_milestone_id,
-        explanation: explanation.trim(),
+        explanation: exercise ? exercise.prompt : explanation.trim(),
         code,
-        file_paths: paths,
+        file_paths: exercise ? [exercise.path] : paths,
         test_output: tests.trim() || null,
       },
       'attempt',
@@ -595,26 +662,37 @@ function AttemptForm({
     }
   }
   return (
-    <Dialog title="Share an attempt" onClose={close} wide>
+    <Dialog title={exercise ? 'Write your answer' : 'Share an attempt'} onClose={close} wide>
       <p className="dialog-description">
-        Show your thinking, even if it’s unfinished. Code and test output are reviewed as material
-        you provide.
+        {exercise
+          ? exercise.prompt
+          : 'Show your thinking, even if it’s unfinished. Code and test output are reviewed as material you provide.'}
       </p>
       <form onSubmit={submit}>
         <fieldset disabled={operation.busy || Boolean(operation.pending)}>
-          <label htmlFor="attempt-explanation">What did you try?</label>
-          <textarea
-            id="attempt-explanation"
-            value={explanation}
-            onChange={(event) => setExplanation(event.target.value)}
-            rows={3}
-            required
-            maxLength={8000}
-            autoFocus
-            placeholder="My approach was…"
-          />
+          {!exercise && (
+            <>
+              <label htmlFor="attempt-explanation">What did you try?</label>
+              <textarea
+                id="attempt-explanation"
+                value={explanation}
+                onChange={(event) => setExplanation(event.target.value)}
+                rows={3}
+                required
+                maxLength={8000}
+                autoFocus
+                placeholder="My approach was…"
+              />
+            </>
+          )}
           <label htmlFor="attempt-code">
-            Code or diff <span>Optional</span>
+            {exercise ? (
+              exercise.answer_label
+            ) : (
+              <>
+                Code or diff <span>Optional</span>
+              </>
+            )}
           </label>
           <textarea
             className="code-input"
@@ -624,47 +702,53 @@ function AttemptForm({
             rows={7}
             maxLength={16000}
             spellCheck={false}
-            placeholder="Paste a small change or an approach in code"
+            placeholder={
+              exercise ? exercise.starter : 'Paste a small change or an approach in code'
+            }
+            required={Boolean(exercise)}
+            autoFocus={Boolean(exercise)}
           />
-          <div className="form-columns">
-            <div>
-              <label htmlFor="attempt-paths">
-                File paths <span>Optional</span>
-              </label>
-              <textarea
-                className="code-input"
-                id="attempt-paths"
-                value={files}
-                onChange={(event) => setFiles(event.target.value)}
-                rows={3}
-                maxLength={6000}
-                spellCheck={false}
-                aria-invalid={paths.length > 30}
-                placeholder={'demo-repo/schemas.py\ndemo-repo/routes.py'}
-              />
-              <p className="field-help">One path per line, up to 30.</p>
-              {paths.length > 30 && (
-                <p role="alert" className="field-error">
-                  Use at most 30 paths.
-                </p>
-              )}
+          {!exercise && (
+            <div className="form-columns">
+              <div>
+                <label htmlFor="attempt-paths">
+                  File paths <span>Optional</span>
+                </label>
+                <textarea
+                  className="code-input"
+                  id="attempt-paths"
+                  value={files}
+                  onChange={(event) => setFiles(event.target.value)}
+                  rows={3}
+                  maxLength={6000}
+                  spellCheck={false}
+                  aria-invalid={paths.length > 30}
+                  placeholder={'demo-repo/schemas.py\ndemo-repo/routes.py'}
+                />
+                <p className="field-help">One path per line, up to 30.</p>
+                {paths.length > 30 && (
+                  <p role="alert" className="field-error">
+                    Use at most 30 paths.
+                  </p>
+                )}
+              </div>
+              <div>
+                <label htmlFor="attempt-tests">
+                  Test output <span>Optional</span>
+                </label>
+                <textarea
+                  className="code-input"
+                  id="attempt-tests"
+                  value={tests}
+                  onChange={(event) => setTests(event.target.value)}
+                  rows={3}
+                  maxLength={8000}
+                  spellCheck={false}
+                  placeholder="Paste the output you observed"
+                />
+              </div>
             </div>
-            <div>
-              <label htmlFor="attempt-tests">
-                Test output <span>Optional</span>
-              </label>
-              <textarea
-                className="code-input"
-                id="attempt-tests"
-                value={tests}
-                onChange={(event) => setTests(event.target.value)}
-                rows={3}
-                maxLength={8000}
-                spellCheck={false}
-                placeholder="Paste the output you observed"
-              />
-            </div>
-          </div>
+          )}
         </fieldset>
         {protectedChange && (
           <Notice tone="info">
@@ -680,13 +764,14 @@ function AttemptForm({
           <button
             className="button primary"
             disabled={
-              !explanation.trim() ||
+              !(exercise ? code.trim() : explanation.trim()) ||
               paths.length > 30 ||
               operation.busy ||
               Boolean(operation.pending)
             }
           >
-            {operation.busy ? <Spinner /> : <Icon name="arrow" />}Submit attempt
+            {operation.busy ? <Spinner /> : <Icon name="arrow" />}
+            {exercise ? 'Submit answer' : 'Submit attempt'}
           </button>
         </footer>
       </form>

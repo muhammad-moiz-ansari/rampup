@@ -8,17 +8,16 @@ import httpx
 
 
 def test_demo_task_catalog_has_distinct_levels_and_problem_context():
-    assert len(TASK_CATALOG) == 3
+    assert len(TASK_CATALOG) == 2
     assert len({task["id"] for task in TASK_CATALOG}) == len(TASK_CATALOG)
     assert TASK in {task["id"] for task in TASK_CATALOG}
     assert {
         task["description"].split("Difficulty: ", 1)[1].splitlines()[0]
         for task in TASK_CATALOG
-    } == {"Entry level", "Intermediate", "Advanced"}
+    } == {"Entry level", "Intermediate"}
     assert {task["assistance_mode"] for task in TASK_CATALOG} == {
         "CONCEPTS",
         "HINTS",
-        "ATTEMPT_REVIEW",
     }
     for task in TASK_CATALOG:
         assert all(
@@ -56,6 +55,8 @@ def test_invalid_google_api_key_is_classified_as_authentication_failure():
         },
     )
     error = httpx.HTTPStatusError(
-        "Bad request", request=httpx.Request("POST", "https://example.test"), response=response
+        "Bad request",
+        request=httpx.Request("POST", "https://example.test"),
+        response=response,
     )
     assert model_http_failure_category(error) == "MODEL_AUTH"

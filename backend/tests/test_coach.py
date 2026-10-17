@@ -249,7 +249,7 @@ def test_semantically_unsupported_or_full_solution_goes_to_review(system):
 def test_configured_conflict_pair_is_explicit_and_cited(system):
     s = system
     with s["factory"]() as db:
-        task = db.scalar(select(Task))
+        task = db.get(Task, s["task_id"])
         task.policy = {
             **task.policy,
             "configured_conflict": ["demo-repo/README.md", "demo-repo/schemas.py"],

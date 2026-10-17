@@ -38,6 +38,8 @@ export interface Task {
   protected_paths: string[]
   attempt_threshold: number
   milestones: Milestone[]
+  exercise?: { prompt: string; starter: string; answer_label: string; path: string } | null
+  suggested_questions?: string[]
 }
 export interface Message {
   id: string

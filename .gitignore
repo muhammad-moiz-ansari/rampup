@@ -14,3 +14,6 @@ __pycache__/
 htmlcov/
 *.log
 .local/
+
+venv/
+docs/test-credentials.md

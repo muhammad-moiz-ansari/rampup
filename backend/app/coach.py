@@ -60,9 +60,7 @@ def model_http_failure_category(error):
             payload = {}
         details = payload.get("error", {}).get("details", [])
         reasons = {
-            detail.get("reason")
-            for detail in details
-            if isinstance(detail, dict)
+            detail.get("reason") for detail in details if isinstance(detail, dict)
         }
         provider_message = payload.get("error", {}).get("message", "").lower()
         if reasons.intersection({"API_KEY_INVALID", "API_KEY_SERVICE_BLOCKED"}) or (
@@ -318,6 +316,13 @@ def submit_input(db, user, session_id, body, key, kind, model):
         project.id,
         session.version,
     )
+    from app.walkthroughs import handle_walkthrough
+
+    guided = handle_walkthrough(
+        db, task, project, session, saved, kind, run, operation, user
+    )
+    if guided is not None:
+        return guided
     history = [
         {"author": m["author"], "content": m["content"][:1000]}
         for m in messages(db, session.id)[-8:]

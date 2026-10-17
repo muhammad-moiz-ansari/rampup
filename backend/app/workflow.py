@@ -50,6 +50,8 @@ def session_access(db, session_id, user, lock=False):
 
 
 def task_view(db, task):
+    from app.walkthroughs import exercise_view, experience
+
     project = db.get(Project, task.project_id)
     return {
         "id": task.id,
@@ -65,6 +67,8 @@ def task_view(db, task):
             for key in ("assistance_mode", "protected_paths", "attempt_threshold")
         },
         "milestones": task.milestones,
+        "exercise": exercise_view(task),
+        "suggested_questions": (experience(task) or {}).get("questions", []),
     }
 
 

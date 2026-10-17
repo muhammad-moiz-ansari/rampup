@@ -53,6 +53,13 @@ class Milestone(Strict):
     criteria: list[str]
 
 
+class Exercise(Strict):
+    prompt: str
+    starter: str
+    answer_label: str
+    path: str
+
+
 class TaskOut(Strict):
     id: UUID
     title: str
@@ -62,6 +69,8 @@ class TaskOut(Strict):
     protected_paths: list[str]
     attempt_threshold: int
     milestones: list[Milestone]
+    exercise: Exercise | None = None
+    suggested_questions: list[str] = Field(default_factory=list)
 
 
 class Citation(Strict):

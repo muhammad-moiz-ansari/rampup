@@ -99,6 +99,7 @@ def system(pg_engine):
             "test-learner-password",
             "mentor@example.test",
             "test-mentor-password",
+            enable_walkthroughs=False,
         )
         db.add(
             User(
@@ -114,7 +115,7 @@ def system(pg_engine):
         )
         project = db.query(Project).first()
         project.commit_sha = "a" * 40
-        task = db.query(Task).first()
+        task = db.get(Task, TASK)
         # Normal tests exercise AI without the explicitly configured demo conflict.
         task.policy = {**task.policy, "configured_conflict": []}
         db.add(

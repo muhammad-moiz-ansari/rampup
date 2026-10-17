@@ -359,7 +359,7 @@ export function AttemptCard({ attempt, number }: { attempt: Attempt; number?: nu
           <span>Attempt{number ? ` ${number}` : ''}</span>
         </span>
         <span className={`assessment assessment-${attempt.assessment.toLowerCase()}`}>
-          {labels[attempt.assessment]}
+          {attempt.assessment_note.startsWith('Correct.') ? 'Correct' : labels[attempt.assessment]}
         </span>
         <Icon name="down" size={15} />
       </summary>

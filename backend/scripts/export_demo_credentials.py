@@ -27,9 +27,10 @@ def main():
         "",
         "Local-only secrets. Do not commit, upload, or share this file.",
         "",
-        "API base URL: http://localhost:8000/api/v1",
-        "Interactive API docs: http://localhost:8000/docs",
-        "Frontend starter: http://localhost:5173 (login/workflows are not implemented yet)",
+        "Local app: http://localhost:8002",
+        "API base URL: http://localhost:8002/api/v1",
+        "Interactive API docs: http://localhost:8002/docs",
+        "Use separate browser tabs for the learner and mentor. Follow docs/demo-script.md.",
         "",
     ]
     for key, label in FIELDS:

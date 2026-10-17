@@ -1316,6 +1316,35 @@
         ],
         "title": "EscalationSummary"
       },
+      "Exercise": {
+        "properties": {
+          "prompt": {
+            "type": "string",
+            "title": "Prompt"
+          },
+          "starter": {
+            "type": "string",
+            "title": "Starter"
+          },
+          "answer_label": {
+            "type": "string",
+            "title": "Answer Label"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "prompt",
+          "starter",
+          "answer_label",
+          "path"
+        ],
+        "title": "Exercise"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1773,6 +1802,23 @@
             },
             "type": "array",
             "title": "Milestones"
+          },
+          "exercise": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Exercise"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "suggested_questions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Suggested Questions"
           }
         },
         "additionalProperties": false,
