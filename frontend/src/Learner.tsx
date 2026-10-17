@@ -112,10 +112,7 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
             },
       )
     } else {
-      setRequestFeedback({
-        tone: 'error',
-        text: 'Your question was not sent. Your draft is still here. Check the error above; retry only if offered.',
-      })
+      setRequestFeedback(null) // OperationNotice shows the actual error and recovery action.
     }
     nearBottom.current = true
   }

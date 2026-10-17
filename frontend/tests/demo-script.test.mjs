@@ -15,17 +15,26 @@ test('question validation reports a correctable error instead of an ambiguous de
   values.clear()
   const session = await localRequest('POST', '/sessions', { task_id: 'demo-task-1' })
   await assert.rejects(
-    localRequest('POST', `/sessions/${session.id}/messages`, { content: 'Where should I start?' }),
+    localRequest('POST', `/sessions/${session.id}/messages`, { content: '' }),
     (error) =>
       error instanceof ApiError &&
       error.status === 400 &&
       !error.retryable &&
-      /next question/.test(error.message),
+      /Write a question/.test(error.message),
   )
   const updated = await localRequest('POST', `/sessions/${session.id}/messages`, {
-    content: TASK_ONE_SCRIPT[0].question,
+    content: 'Where should I start?',
   })
   assert.equal(updated.messages.at(-1).content, TASK_ONE_SCRIPT[0].response)
+  const second = await localRequest('POST', `/sessions/${session.id}/messages`, {
+    content: 'how do I validate this field??',
+  })
+  assert.equal(second.messages.at(-1).content, TASK_ONE_SCRIPT[1].response)
+  const third = await localRequest('POST', `/sessions/${session.id}/messages`, {
+    content: 'what do I do next?',
+  })
+  assert.match(third.messages.at(-1).content, /Open Attempts/)
+  assert.equal(third.messages.filter((item) => item.author === 'LEARNER').length, 3)
 })
 
 test('Task 1 follows the scripted questions and criteria-gates completion', async () => {
@@ -47,10 +56,6 @@ test('Task 1 follows the scripted questions and criteria-gates completion', asyn
   await assert.rejects(
     demoRequest('POST', attemptPath, baseAttempt),
     /Answer both questions before sharing your work/,
-  )
-  await assert.rejects(
-    demoRequest('POST', messagePath, { content: TASK_ONE_SCRIPT[1].question }),
-    /Choose the next question shown in the workspace/,
   )
 
   let updated = await demoRequest('POST', messagePath, {

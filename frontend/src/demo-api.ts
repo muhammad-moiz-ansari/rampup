@@ -70,10 +70,9 @@ export const TASK_ONE_SAMPLE_ATTEMPT = {
 }
 
 export function taskOneQuestionCount(messages: Message[]) {
-  const scriptedQuestions = new Set(TASK_ONE_SCRIPT.map((item) => item.question.toLowerCase()))
+  const replies = new Set<string>(TASK_ONE_SCRIPT.map((item) => item.response))
   return messages.filter(
-    (message) =>
-      message.author === 'LEARNER' && scriptedQuestions.has(message.content.trim().toLowerCase()),
+    (message) => message.author === 'AI' && replies.has(message.content.trim()),
   ).length
 }
 
@@ -289,12 +288,7 @@ function messageSession(store: DemoStore, id: string, body: Record<string, unkno
   const session = findSession(store, id)
   const content = String(body.content || '').trim()
   if (!content) throw new Error('Write a question before sending.')
-  if (session.task_id === 'demo-task-1' && session.state === 'ACTIVE') {
-    const expected = TASK_ONE_SCRIPT[taskOneQuestionCount(session.messages)]
-    if (!expected || content.toLowerCase() !== expected.question.toLowerCase()) {
-      throw new Error('Choose the next question shown in the workspace.')
-    }
-  }
+  const nextAnswer = TASK_ONE_SCRIPT[taskOneQuestionCount(session.messages)]
   session.messages.push(makeMessage('LEARNER', content))
   session.version++
   session.updated_at = now()
@@ -313,7 +307,9 @@ function messageSession(store: DemoStore, id: string, body: Record<string, unkno
     const detail = createCase(session, 'SOURCE_CONFLICT', content, [readmeSource, schemaSource])
     store.cases[detail.id] = detail
   } else {
-    const reply = TASK_ONE_SCRIPT[taskOneQuestionCount(session.messages) - 1].response
+    const reply =
+      nextAnswer?.response ||
+      'You have covered the schema and validation pattern. Open Attempts to write the description field declaration, or review the guidance above.'
     session.messages.push(makeMessage('AI', reply, [schemaSource, routeSource]))
     session.activity.push(
       makeActivity('search_project_context', 'Found the request schema and create-route example.'),
