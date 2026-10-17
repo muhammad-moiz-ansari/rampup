@@ -289,7 +289,7 @@ function messageSession(store: DemoStore, id: string, body: Record<string, unkno
   const session = findSession(store, id)
   const content = String(body.content || '').trim()
   if (!content) throw new Error('Write a question before sending.')
-  if (session.task_id === 'demo-task-1') {
+  if (session.task_id === 'demo-task-1' && session.state === 'ACTIVE') {
     const expected = TASK_ONE_SCRIPT[taskOneQuestionCount(session.messages)]
     if (!expected || content.toLowerCase() !== expected.question.toLowerCase()) {
       throw new Error('Choose the next question shown in the workspace.')

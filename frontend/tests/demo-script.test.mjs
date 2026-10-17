@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { ApiError, localRequest } from '../src/api.ts'
 import { demoRequest, TASK_ONE_SAMPLE_ATTEMPT, TASK_ONE_SCRIPT } from '../src/demo-api.ts'
 
 const values = new Map()
@@ -9,6 +10,23 @@ globalThis.localStorage = {
   removeItem: (key) => values.delete(key),
   clear: () => values.clear(),
 }
+
+test('question validation reports a correctable error instead of an ambiguous delivery failure', async () => {
+  values.clear()
+  const session = await localRequest('POST', '/sessions', { task_id: 'demo-task-1' })
+  await assert.rejects(
+    localRequest('POST', `/sessions/${session.id}/messages`, { content: 'Where should I start?' }),
+    (error) =>
+      error instanceof ApiError &&
+      error.status === 400 &&
+      !error.retryable &&
+      /next question/.test(error.message),
+  )
+  const updated = await localRequest('POST', `/sessions/${session.id}/messages`, {
+    content: TASK_ONE_SCRIPT[0].question,
+  })
+  assert.equal(updated.messages.at(-1).content, TASK_ONE_SCRIPT[0].response)
+})
 
 test('Task 1 follows the scripted questions and criteria-gates completion', async () => {
   values.clear()

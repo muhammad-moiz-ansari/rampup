@@ -73,9 +73,23 @@ export function createClient({ token, expired, fetcher = fetch, timeout = 65000 
   }
 }
 
+export async function localRequest<T>(
+  method: 'GET' | 'POST',
+  path: string,
+  body?: unknown,
+): Promise<T> {
+  try {
+    return await demoRequest<T>(method, path, body)
+  } catch (failure) {
+    if (failure instanceof ApiError) throw failure
+    // Local validation rejects the request before delivery; retrying cannot fix it.
+    throw new ApiError(errorMessage(failure), 400, 'VALIDATION_ERROR', false)
+  }
+}
+
 export const api = {
-  get: <T>(path: string) => demoRequest<T>('GET', path),
-  post: <T>(path: string, body: unknown, _key?: string) => demoRequest<T>('POST', path, body),
+  get: <T>(path: string) => localRequest<T>('GET', path),
+  post: <T>(path: string, body: unknown, _key?: string) => localRequest<T>('POST', path, body),
 }
 
 export interface Operation {

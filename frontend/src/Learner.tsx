@@ -64,6 +64,11 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
   const finished = session.state === 'COMPLETED'
   const scriptedTaskOne = session.task.id === 'demo-task-1'
   const scriptedQuestionsAnswered = scriptedTaskOne ? taskOneQuestionCount(session.messages) : 0
+  const suggestedQuestions = scriptedTaskOne
+    ? TASK_ONE_SCRIPT.slice(scriptedQuestionsAnswered, scriptedQuestionsAnswered + 1).map(
+        (item) => item.question,
+      )
+    : session.task.suggested_questions || []
   const running = coach.busy || session.latest_run?.status === 'RUNNING'
   const coachBlocked = running || Boolean(coach.pending)
   const messageOperation = active ? coach : clarification
@@ -109,7 +114,7 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
     } else {
       setRequestFeedback({
         tone: 'error',
-        text: 'Delivery could not be confirmed. Your draft is still here; use Retry original request if shown.',
+        text: 'Your question was not sent. Your draft is still here. Check the error above; retry only if offered.',
       })
     }
     nearBottom.current = true
@@ -316,9 +321,14 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
                   <h2>Ask about the code</h2>
                   <p>Ask a question or share your approach.</p>
                   <div className="starter-questions">
-                    {(session.task.suggested_questions?.length
-                      ? session.task.suggested_questions
-                      : ['Where should I start?', 'Which file should I read first?']
+                    {(scriptedTaskOne
+                      ? TASK_ONE_SCRIPT.slice(
+                          scriptedQuestionsAnswered,
+                          scriptedQuestionsAnswered + 1,
+                        ).map((item) => item.question)
+                      : session.task.suggested_questions?.length
+                        ? session.task.suggested_questions
+                        : ['Where should I start?', 'Which file should I read first?']
                     ).map((prompt) => (
                       <button
                         key={prompt}
@@ -403,7 +413,7 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
               )}
               {active &&
                 entryCount > 0 &&
-                (session.task.suggested_questions || []).filter(
+                suggestedQuestions.filter(
                   (prompt) =>
                     !session.messages.some(
                       (message) =>
@@ -411,7 +421,7 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
                     ),
                 ).length > 0 && (
                   <div className="next-questions">
-                    {(session.task.suggested_questions || [])
+                    {suggestedQuestions
                       .filter(
                         (prompt) =>
                           !session.messages.some(
