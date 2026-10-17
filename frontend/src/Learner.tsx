@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { api } from './api'
+import { TASK_ONE_SAMPLE_ATTEMPT, TASK_ONE_SCRIPT, taskOneQuestionCount } from './demo-api'
 import { newestSession, useDraft, useOperation, useResource } from './hooks'
 import type { Session, User } from './types'
 import {
@@ -61,6 +62,8 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
 
   const active = session.state === 'ACTIVE'
   const finished = session.state === 'COMPLETED'
+  const scriptedTaskOne = session.task.id === 'demo-task-1'
+  const scriptedQuestionsAnswered = scriptedTaskOne ? taskOneQuestionCount(session.messages) : 0
   const running = coach.busy || session.latest_run?.status === 'RUNNING'
   const coachBlocked = running || Boolean(coach.pending)
   const messageOperation = active ? coach : clarification
@@ -78,14 +81,15 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
           item.end_line === source.end_line,
       ) === index,
   )
-  async function sendQuestion(event: FormEvent) {
-    event.preventDefault()
-    if (!question.trim() || messageBlocked || finished) return
+  const starterQuestions =
+    scriptedTaskOne ? [] : ['Where should quantity validation live?']
+  async function deliverQuestion(content: string) {
+    if (!content.trim() || messageBlocked || finished) return
     setRequestFeedback({ tone: 'info', text: 'Sending your question to RampUp…' })
     setView('conversation')
     const outcome = await messageOperation.run(
       `/sessions/${id}/messages`,
-      { content: question.trim() },
+      { content: content.trim() },
       active ? 'question' : 'clarification',
     )
     if (outcome !== 'failed') {
@@ -93,15 +97,15 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
       setRequestFeedback(
         outcome === 'saved'
           ? {
-              tone: 'info',
-              text: 'Your question was saved, but RampUp could not prepare a reply. See the error above to retry or ask your mentor.',
-            }
+            tone: 'info',
+            text: 'Your question was saved, but RampUp could not prepare a reply. See the error above to retry or ask your mentor.',
+          }
           : {
-              tone: 'success',
-              text: active
-                ? 'Question sent. Your message and the resulting guidance or mentor handoff are in Conversation.'
-                : 'Clarification sent to your mentor and saved in Conversation.',
-            },
+            tone: 'success',
+            text: active
+              ? 'Question sent. Your message and the resulting guidance or mentor handoff are in Conversation.'
+              : 'Clarification sent to your mentor and saved in Conversation.',
+          },
       )
     } else {
       setRequestFeedback({
@@ -110,6 +114,10 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
       })
     }
     nearBottom.current = true
+  }
+  async function sendQuestion(event: FormEvent) {
+    event.preventDefault()
+    await deliverQuestion(question)
   }
   async function askMentor(event: FormEvent) {
     event.preventDefault()
@@ -130,18 +138,18 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
     setRequestFeedback(
       outcome === 'done'
         ? {
-            tone: 'success',
-            text: 'Retry succeeded. The saved question and resulting guidance or mentor handoff are in Conversation.',
-          }
+          tone: 'success',
+          text: 'Retry succeeded. The saved question and resulting guidance or mentor handoff are in Conversation.',
+        }
         : outcome === 'saved'
           ? {
-              tone: 'info',
-              text: 'The question is saved, but RampUp still could not prepare a reply. See the updated error above or ask your mentor.',
-            }
+            tone: 'info',
+            text: 'The question is saved, but RampUp still could not prepare a reply. See the updated error above or ask your mentor.',
+          }
           : {
-              tone: 'error',
-              text: 'Retry did not complete. See the error above for the request status and next step.',
-            },
+            tone: 'error',
+            text: 'Retry did not complete. See the error above for the request status and next step.',
+          },
     )
   }
 
@@ -159,23 +167,24 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
             <span>
               {session.task.repository.owner} / <strong>{session.task.repository.name}</strong>
             </span>
-            <code>{session.task.repository.commit_sha.slice(0, 7)}</code>
           </div>
         </div>
         <div className="heading-actions">
-          <button
-            className="button secondary"
-            onClick={() => setModal('mentor')}
-            disabled={
-              finished ||
-              session.state === 'COMPLETION_REVIEW' ||
-              Boolean(session.open_escalation) ||
-              mentor.busy
-            }
-          >
-            <Icon name="chat" />
-            {session.open_escalation ? 'Mentor requested' : 'Ask my mentor'}
-          </button>
+          {!scriptedTaskOne && (
+            <button
+              className="button secondary"
+              onClick={() => setModal('mentor')}
+              disabled={
+                finished ||
+                session.state === 'COMPLETION_REVIEW' ||
+                Boolean(session.open_escalation) ||
+                mentor.busy
+              }
+            >
+              <Icon name="chat" />
+              {session.open_escalation ? 'Mentor requested' : 'Ask my mentor'}
+            </button>
+          )}
           <button className="icon-button" aria-label="Refresh workspace" onClick={resource.refresh}>
             <Icon name="refresh" />
           </button>
@@ -215,7 +224,7 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
           <summary>
             <span>
               <strong>Task brief</strong>
-              <small>Problem, goal, code structure, milestones, and task policy</small>
+              <small>Problem, goal, milestones, and code structure</small>
             </span>
             <Icon name="down" />
           </summary>
@@ -285,7 +294,7 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
               <div>
                 <strong>Task completed</strong>
                 <p>
-                  Your mentor confirmed this task. Your conversation and sources are here whenever
+                  Your work meets the task criteria. Your conversation and sources are here whenever
                   you need them.
                 </p>
               </div>
@@ -324,7 +333,7 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
                         {prompt}
                       </button>
                     ))}
-                  </div>
+                  </div>}
                 </div>
               ))}
             {view === 'attempts' && session.task.exercise && (
@@ -363,7 +372,7 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
               (sources.length ? (
                 <div className="source-history">
                   <h2>The code behind the guidance</h2>
-                  <p className="muted">Each excerpt is pinned to the commit shown below.</p>
+                  <p className="muted">Repository excerpts referenced in the conversation.</p>
                   {sources.map((source) => (
                     <CodeExcerpt
                       key={`${source.source_id}-${source.start_line}-${source.end_line}`}
@@ -383,10 +392,10 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
                 <Notice tone={requestFeedback.tone}>{requestFeedback.text}</Notice>
               )}
               {running && active && (
-                <div className="coach-progress" role="status">
-                  <Spinner label="Preparing guidance" />
-                  <span>Finding a useful next step…</span>
-                  <span className="muted">You can ask your mentor at any time.</span>
+                <div className="typing-indicator" role="status" aria-label="RampUp is typing">
+                  <span>RampUp</span>
+                  <span>is typing</span>
+                  <i aria-hidden="true"><b /><b /><b /></i>
                 </div>
               )}
               {active &&
@@ -550,13 +559,13 @@ export function LearnerWorkspace({ id, user }: { id: string; user: User }) {
             setRequestFeedback(
               outcome === 'saved'
                 ? {
-                    tone: 'info',
-                    text: 'Your attempt was saved, but RampUp could not prepare feedback. See the error above to retry or ask your mentor.',
-                  }
+                  tone: 'info',
+                  text: 'Your attempt was saved, but RampUp could not prepare feedback. See the error above to retry or ask your mentor.',
+                }
                 : {
-                    tone: 'success',
-                    text: 'Attempt submitted. RampUp feedback or a mentor handoff will appear in Conversation.',
-                  },
+                  tone: 'success',
+                  text: 'Attempt submitted. RampUp feedback or a mentor handoff will appear in Conversation.',
+                },
             )
           }}
         />
@@ -632,6 +641,13 @@ function AttemptForm({
   const [code, setCode] = useDraft(`${scope}.code`)
   const [files, setFiles] = useDraft(`${scope}.files`)
   const [tests, setTests] = useDraft(`${scope}.tests`)
+  const scriptedTaskOne = session.task.id === 'demo-task-1'
+  function loadPreparedAttempt() {
+    setExplanation(TASK_ONE_SAMPLE_ATTEMPT.explanation)
+    setCode(TASK_ONE_SAMPLE_ATTEMPT.code)
+    setFiles(TASK_ONE_SAMPLE_ATTEMPT.file_paths.join('\n'))
+    setTests('')
+  }
   const paths = files
     .split(/[\n,]/)
     .map((path) => path.trim())

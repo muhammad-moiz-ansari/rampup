@@ -173,24 +173,12 @@ export default function App() {
 }
 
 function Login({ onLogin, expired }: { onLogin: (result: LoginResult) => void; expired: boolean }) {
-  const [email, setEmail] = useState(''),
-    [password, setPassword] = useState('')
-  const [visible, setVisible] = useState(false),
-    [busy, setBusy] = useState(false),
-    [error, setError] = useState('')
-  const lock = useRef(false)
-  async function submit(event: FormEvent) {
-    event.preventDefault()
-    if (lock.current) return
-    lock.current = true
+  const [busy, setBusy] = useState(false)
+  async function startDemo(role: 'LEARNER' | 'MENTOR') {
     setBusy(true)
-    setError('')
     try {
-      onLogin(await api.post<LoginResult>('/auth/login', { email: email.trim(), password }))
-    } catch (failure) {
-      setError(errorMessage(failure))
+      onLogin(await api.post<LoginResult>('/auth/demo-login', { role }))
     } finally {
-      lock.current = false
       setBusy(false)
     }
   }
@@ -219,56 +207,23 @@ function Login({ onLogin, expired }: { onLogin: (result: LoginResult) => void; e
           <div className="login-mini-brand">
             <Brand />
           </div>
-          <h2>Sign in</h2>
-          <p className="login-description">Use your team account.</p>
+          <h2>Choose a demo role</h2>
+          <p className="login-description">Choose a role to enter the learning workspace.</p>
           {expired && (
-            <Notice tone="info">Your session expired. Sign in to continue your saved work.</Notice>
+            <Notice tone="info">Choose a role to continue the saved demo.</Notice>
           )}
-          <form onSubmit={submit}>
-            <label htmlFor="login-email">Email address</label>
-            <input
-              id="login-email"
-              name="email"
-              type="email"
-              autoComplete="username"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              required
-              maxLength={255}
-              autoFocus
-              placeholder="you@yourteam.com"
-              disabled={busy}
-            />
-            <label htmlFor="login-password">Password</label>
-            <div className="password-field">
-              <input
-                id="login-password"
-                name="password"
-                type={visible ? 'text' : 'password'}
-                autoComplete="current-password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                required
-                maxLength={256}
-                disabled={busy}
-              />
-              <button
-                type="button"
-                className="icon-button"
-                aria-label={visible ? 'Hide password' : 'Show password'}
-                aria-pressed={visible}
-                onClick={() => setVisible(!visible)}
-              >
-                <Icon name="eye" />
-              </button>
-            </div>
-            {error && <Notice>{error}</Notice>}
-            <button className="button primary full-width login-submit" disabled={busy}>
-              {busy ? <Spinner label="Signing in" /> : null}
-              {busy ? 'Signing in…' : 'Sign in'}
+          <div className="demo-role-actions">
+            <button className="button primary full-width" disabled={busy} onClick={() => void startDemo('LEARNER')}>
+              {busy ? <Spinner label="Opening learner demo" /> : <Icon name="task" />}
+              Enter as learner
               {!busy && <Icon name="arrow" />}
             </button>
-          </form>
+            <button className="button secondary full-width" disabled={busy} onClick={() => void startDemo('MENTOR')}>
+              {busy ? <Spinner label="Opening mentor demo" /> : <Icon name="inbox" />}
+              Enter as mentor
+              {!busy && <Icon name="arrow" />}
+            </button>
+          </div>
         </div>
       </section>
     </main>
@@ -290,33 +245,33 @@ function Shell({
   const mentor = user.role === 'MENTOR'
   const links = mentor
     ? [
-        {
-          href: '/reviews',
-          label: 'Review queue',
-          icon: 'inbox' as const,
-          active: path.startsWith('/review'),
-        },
-        {
-          href: '/completions',
-          label: 'Completion reviews',
-          icon: 'check' as const,
-          active: path.startsWith('/completion'),
-        },
-        {
-          href: '/tasks',
-          label: 'Assigned tasks',
-          icon: 'task' as const,
-          active: path.startsWith('/task'),
-        },
-      ]
+      {
+        href: '/reviews',
+        label: 'Review queue',
+        icon: 'inbox' as const,
+        active: path.startsWith('/review'),
+      },
+      {
+        href: '/completions',
+        label: 'Completion reviews',
+        icon: 'check' as const,
+        active: path.startsWith('/completion'),
+      },
+      {
+        href: '/tasks',
+        label: 'Assigned tasks',
+        icon: 'task' as const,
+        active: path.startsWith('/task'),
+      },
+    ]
     : [
-        {
-          href: '/tasks',
-          label: 'My tasks',
-          icon: 'task' as const,
-          active: path.startsWith('/task') || path.startsWith('/session'),
-        },
-      ]
+      {
+        href: '/tasks',
+        label: 'My tasks',
+        icon: 'task' as const,
+        active: path.startsWith('/task') || path.startsWith('/session'),
+      },
+    ]
   function navigation() {
     return (
       <>
@@ -393,6 +348,7 @@ function Shell({
             </span>
             {mentor ? 'Mentor workspace' : 'Learning workspace'}
           </span>
+          <span className="demo-mode">DEMO</span>
           <button
             className="icon-button mobile-menu"
             aria-label="Open navigation"
@@ -555,7 +511,6 @@ function TaskDetails({ id, user }: { id: string; user: User }) {
           <div className="repository">
             <Icon name="branch" size={15} />
             {task.repository.owner} / {task.repository.name}
-            <code>{task.repository.commit_sha.slice(0, 7)}</code>
           </div>
         </div>
       </header>
@@ -601,13 +556,6 @@ function TaskDetails({ id, user }: { id: string; user: User }) {
               Go to review queue <Icon name="arrow" />
             </a>
           )}
-          <div className="task-policy-note">
-            <Icon name="chat" size={16} />
-            <span>
-              Mentor review follows {task.attempt_threshold} consecutive unresolved attempts.
-              Learners can ask for help sooner.
-            </span>
-          </div>
         </aside>
       </div>
     </div>
